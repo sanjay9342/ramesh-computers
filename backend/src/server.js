@@ -11,11 +11,30 @@ import adminRoutes from './routes/admin.js'
 const app = express()
 const PORT = process.env.PORT || 5000
 
-// Middleware
-app.use(cors({
-  origin: ['http://localhost:5174', 'http://localhost:5173'],
-  credentials: true
-}))
+// ================= CORS FIX =================
+const allowedOrigins = [
+  'http://localhost:5174',
+  'http://localhost:5173',
+  'https://rameshcomputers.netlify.app'
+]
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow Postman / mobile apps / no-origin requests
+      if (!origin) return callback(null, true)
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true)
+      } else {
+        return callback(new Error('Not allowed by CORS: ' + origin))
+      }
+    },
+    credentials: true
+  })
+)
+// ============================================
+
 app.use(express.json())
 
 // Routes
@@ -30,10 +49,10 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Ramesh Computers API is running' })
 })
 
-// Error handling middleware
+// Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack)
-  res.status(500).json({ error: 'Something went wrong!' })
+  res.status(500).json({ error: err.message || 'Something went wrong!' })
 })
 
 app.listen(PORT, () => {
