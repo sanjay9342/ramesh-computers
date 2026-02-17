@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-roboto bg-white text-gray-900 overflow-x-hidden;
+  }
+  
+  * {
+    @apply box-border;
+  }
+}
+
+@layer components {
+  .fk-btn {
+    @apply px-4 py-2 rounded font-medium transition-all duration-200;
+  }
+  
+  .fk-btn-primary {
+    @apply bg-fk-blue text-white hover:bg-fk-blue-dark;
+  }
+  
+  .fk-btn-secondary {
+    @apply bg-transparent text-fk-blue border border-fk-blue hover:bg-fk-blue hover:text-white;
+  }
+  
+  .fk-input {
+    @apply w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-fk-blue;
+  }
+  
+  .fk-card {
+    @apply bg-white rounded shadow-fk hover:shadow-fk-hover transition-shadow duration-200;
+  }
+  
+  .fk-badge {
+    @apply px-2 py-1 text-xs font-medium rounded;
+  }
+  
+  .fk-badge-green {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  .fk-badge-red {
+    @apply bg-red-100 text-red-800;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f3f6;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c4c4c4;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
+/* Swiper custom styles */
+.swiper-button-next,
+.swiper-button-prev {
+  color: #2874f0 !important;
+  background: transparent !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+}
+
+.swiper-button-next::after,
+.swiper-button-prev::after {
+  font-size: 14px !important;
+  font-weight: bold !important;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes marqueeSlide {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.brand-marquee {
+  animation: marqueeSlide 18s linear infinite;
+  width: max-content;
+}
+
+/* Product image hover zoom */
+.product-image-container {
+  overflow: hidden;
+}
+
+.product-image-container img {
+  transition: transform 0.3s ease;
+}
+
+.product-image-container:hover img {
+  transform: scale(1.05);
+}

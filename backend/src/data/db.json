@@ -1,0 +1,514 @@
+{
+  "products": [
+    {
+      "id": 18,
+      "title": "Sanjay",
+      "slug": "",
+      "category": "desktops",
+      "brand": "dell",
+      "price": 40000,
+      "discountPrice": 39000,
+      "description": "sqwdefgh",
+      "images": [],
+      "image": "",
+      "specs": {},
+      "stock": 3,
+      "rating": 1,
+      "reviewCount": 0,
+      "isFeatured": true,
+      "freeDelivery": false,
+      "createdAt": "2026-02-17T03:34:16.052Z",
+      "updatedAt": "2026-02-17T03:34:16.052Z"
+    },
+    {
+      "id": 17,
+      "title": "sanjay",
+      "slug": "",
+      "category": "desktops",
+      "brand": "DEll",
+      "price": 20000,
+      "discountPrice": 19000,
+      "description": "it is good",
+      "images": [],
+      "image": "",
+      "specs": {},
+      "stock": 2,
+      "rating": 4,
+      "reviewCount": 0,
+      "isFeatured": false,
+      "freeDelivery": false,
+      "createdAt": "2026-02-17T03:29:39.540Z",
+      "updatedAt": "2026-02-17T03:29:39.540Z"
+    },
+    {
+      "id": 1,
+      "title": "HP 15s Intel Core i5 12th Gen - (8 GB/512 GB SSD/Windows 11 Home) 15s-fq5007TU Laptop",
+      "slug": "hp-15s-i5-12th-gen",
+      "category": "laptops",
+      "brand": "HP",
+      "price": 54999,
+      "discountPrice": 45999,
+      "description": "HP 15s Intel Core i5 12th Gen laptop with 8GB RAM, 512GB SSD, Windows 11",
+      "images": [
+        "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600",
+        "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=600"
+      ],
+      "specs": {
+        "processor": "Intel Core i5-1235U",
+        "ram": "8GB DDR4",
+        "storage": "512GB NVMe SSD",
+        "display": "15.6\" FHD",
+        "os": "Windows 11 Home",
+        "battery": "41Wh",
+        "warranty": "1 Year Onsite"
+      },
+      "stock": 15,
+      "rating": 4.3,
+      "reviewCount": 256,
+      "isFeatured": true,
+      "freeDelivery": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "title": "Dell Inspiron 15 Intel Core i5 12th Gen - (16 GB/512 GB SSD/Windows 11) 5520 Laptop",
+      "slug": "dell-inspiron-i5-12th-gen",
+      "category": "laptops",
+      "brand": "Dell",
+      "price": 62999,
+      "discountPrice": 54999,
+      "description": "Dell Inspiron 15 with Intel Core i5, 16GB RAM, 512GB SSD",
+      "images": [
+        "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=600"
+      ],
+      "specs": {
+        "processor": "Intel Core i5-1235U",
+        "ram": "16GB DDR4",
+        "storage": "512GB SSD",
+        "display": "15.6\" FHD",
+        "os": "Windows 11"
+      },
+      "stock": 8,
+      "rating": 4.5,
+      "reviewCount": 189,
+      "isFeatured": true,
+      "freeDelivery": true,
+      "createdAt": "2024-01-05T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=600",
+      "updatedAt": "2024-01-05T00:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "title": "Lenovo IdeaPad Gaming 3 Intel Core i5 12th Gen - (8 GB/512 GB SSD/NVIDIA RTX 3050/Windows 11) 15IHU6 Laptop",
+      "slug": "lenovo-ideapad-gaming-i5",
+      "category": "laptops",
+      "brand": "Lenovo",
+      "price": 79999,
+      "discountPrice": 69999,
+      "description": "Lenovo IdeaPad Gaming 3 with RTX 3050 graphics",
+      "images": [
+        "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=600"
+      ],
+      "specs": {
+        "processor": "Intel Core i5-12450H",
+        "ram": "8GB DDR4",
+        "storage": "512GB SSD",
+        "display": "15.6\" FHD 120Hz",
+        "graphics": "NVIDIA RTX 3050 4GB",
+        "os": "Windows 11"
+      },
+      "stock": 5,
+      "rating": 4.7,
+      "reviewCount": 312,
+      "isFeatured": true,
+      "freeDelivery": true,
+      "createdAt": "2024-01-10T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=600",
+      "updatedAt": "2024-01-10T00:00:00.000Z"
+    },
+    {
+      "id": 4,
+      "title": "ASUS VivoBook 15 Intel Core i3 12th Gen - (8 GB/512 GB SSD/Windows 11) X1500EA-EJ3221WS Laptop",
+      "slug": "asus-vivobook-i3",
+      "category": "laptops",
+      "brand": "ASUS",
+      "price": 42999,
+      "discountPrice": 37999,
+      "description": "ASUS VivoBook 15 with Intel Core i3, perfect for everyday use",
+      "images": [
+        "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600"
+      ],
+      "specs": {
+        "processor": "Intel Core i3-1215U",
+        "ram": "8GB DDR4",
+        "storage": "512GB SSD",
+        "display": "15.6\" FHD",
+        "os": "Windows 11"
+      },
+      "stock": 20,
+      "rating": 4.2,
+      "reviewCount": 145,
+      "isFeatured": false,
+      "freeDelivery": false,
+      "createdAt": "2024-01-12T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600",
+      "updatedAt": "2024-01-12T00:00:00.000Z"
+    },
+    {
+      "id": 5,
+      "title": "HP Pavilion Desktop - (12th Gen Intel Core i5/8 GB/512 GB SSD/Windows 11) TP01-2000in",
+      "slug": "hp-pavilion-desktop-i5",
+      "category": "desktops",
+      "brand": "HP",
+      "price": 54999,
+      "discountPrice": 47999,
+      "description": "HP Pavilion Desktop with 12th Gen Intel Core i5",
+      "images": [
+        "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=600"
+      ],
+      "specs": {
+        "processor": "Intel Core i5-12400",
+        "ram": "8GB DDR4",
+        "storage": "512GB SSD",
+        "os": "Windows 11"
+      },
+      "stock": 10,
+      "rating": 4.4,
+      "reviewCount": 78,
+      "isFeatured": true,
+      "freeDelivery": true,
+      "createdAt": "2024-01-08T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=600",
+      "updatedAt": "2024-01-08T00:00:00.000Z"
+    },
+    {
+      "id": 6,
+      "title": "JBL Flip 5 Wireless Bluetooth Speaker (Squad)",
+      "slug": "jbl-flip-5",
+      "category": "speakers",
+      "brand": "JBL",
+      "price": 8999,
+      "discountPrice": 5999,
+      "description": "JBL Flip 5 portable speaker with powerful bass",
+      "images": [
+        "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600"
+      ],
+      "specs": {
+        "connectivity": "Bluetooth 4.2",
+        "battery": "12 hours",
+        "waterproof": "IPX7",
+        "output": "20W"
+      },
+      "stock": 25,
+      "rating": 4.6,
+      "reviewCount": 523,
+      "isFeatured": true,
+      "freeDelivery": true,
+      "createdAt": "2024-01-02T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600",
+      "updatedAt": "2024-01-02T00:00:00.000Z"
+    },
+    {
+      "id": 7,
+      "title": "Sony SRS-XB13 Wireless Speaker (Blue)",
+      "slug": "sony-srs-xb13",
+      "category": "speakers",
+      "brand": "Sony",
+      "price": 4499,
+      "discountPrice": 3499,
+      "description": "Sony SRS-XB13 with EXTRA BASS",
+      "images": [
+        "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=600"
+      ],
+      "specs": {
+        "connectivity": "Bluetooth 5.0",
+        "battery": "16 hours",
+        "waterproof": "IP67"
+      },
+      "stock": 30,
+      "rating": 4.5,
+      "reviewCount": 234,
+      "isFeatured": false,
+      "freeDelivery": false,
+      "createdAt": "2024-01-04T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=600",
+      "updatedAt": "2024-01-04T00:00:00.000Z"
+    },
+    {
+      "id": 8,
+      "title": "HP DeskJet 2723 All-in-One Printer",
+      "slug": "hp-deskjet-2723",
+      "category": "printers",
+      "brand": "HP",
+      "price": 6499,
+      "discountPrice": 4999,
+      "description": "HP DeskJet wireless all-in-one printer",
+      "images": [
+        "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?w=600"
+      ],
+      "specs": {
+        "type": "InkJet",
+        "functions": "Print, Copy, Scan",
+        "connectivity": "WiFi, USB",
+        "printSpeed": "7.5 ppm"
+      },
+      "stock": 18,
+      "rating": 4.1,
+      "reviewCount": 167,
+      "isFeatured": false,
+      "freeDelivery": true,
+      "createdAt": "2024-01-06T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?w=600",
+      "updatedAt": "2024-01-06T00:00:00.000Z"
+    },
+    {
+      "id": 9,
+      "title": "Canon Pixma G3000 All-in-One Ink Tank Printer",
+      "slug": "canon-pixma-g3000",
+      "category": "printers",
+      "brand": "Canon",
+      "price": 12999,
+      "discountPrice": 9999,
+      "description": "Canon Pixma with integrated ink tank system",
+      "images": [
+        "https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600"
+      ],
+      "specs": {
+        "type": "InkTank",
+        "functions": "Print, Copy, Scan",
+        "connectivity": "WiFi, USB",
+        "printSpeed": "8.8 ipm"
+      },
+      "stock": 12,
+      "rating": 4.4,
+      "reviewCount": 289,
+      "isFeatured": true,
+      "freeDelivery": true,
+      "createdAt": "2024-01-09T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600",
+      "updatedAt": "2024-01-09T00:00:00.000Z"
+    },
+    {
+      "id": 10,
+      "title": "CP Plus 4MP Dome Camera (CP-DNC-D24C2)",
+      "slug": "cp-plus-4mp-dome",
+      "category": "cctv",
+      "brand": "CP Plus",
+      "price": 2499,
+      "discountPrice": 1899,
+      "description": "CP Plus 4MP indoor dome camera",
+      "images": [
+        "https://images.unsplash.com/photo-1557862921-37829c790f19?w=600"
+      ],
+      "specs": {
+        "resolution": "4MP",
+        "type": "Dome",
+        "nightVision": "30m IR",
+        "connectivity": "Wired"
+      },
+      "stock": 35,
+      "rating": 4.3,
+      "reviewCount": 198,
+      "isFeatured": false,
+      "freeDelivery": false,
+      "createdAt": "2024-01-07T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1557862921-37829c790f19?w=600",
+      "updatedAt": "2024-01-07T00:00:00.000Z"
+    },
+    {
+      "id": 11,
+      "title": "Hikvision 4MP Outdoor Bullet Camera (DS-2CD2043G2)",
+      "slug": "hikvision-4mp-bullet",
+      "category": "cctv",
+      "brand": "Hikvision",
+      "price": 3499,
+      "discountPrice": 2799,
+      "description": "Hikvision 4MP outdoor bullet camera with advanced analytics",
+      "images": [
+        "https://images.unsplash.com/photo-1589903308904-1010c2294adc?w=600"
+      ],
+      "specs": {
+        "resolution": "4MP",
+        "type": "Bullet",
+        "nightVision": "50m IR",
+        "connectivity": "PoE"
+      },
+      "stock": 22,
+      "rating": 4.6,
+      "reviewCount": 156,
+      "isFeatured": true,
+      "freeDelivery": true,
+      "createdAt": "2024-01-11T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1589903308904-1010c2294adc?w=600",
+      "updatedAt": "2024-01-11T00:00:00.000Z"
+    },
+    {
+      "id": 12,
+      "title": "Logitech MX Master 3 Wireless Mouse",
+      "slug": "logitech-mx-master-3",
+      "category": "accessories",
+      "brand": "Logitech",
+      "price": 7999,
+      "discountPrice": 6499,
+      "description": "Logitech MX Master 3 advanced wireless mouse",
+      "images": [
+        "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=600"
+      ],
+      "specs": {
+        "connectivity": "Bluetooth, USB Receiver",
+        "battery": "70 days",
+        "dpi": "4000",
+        "buttons": "7"
+      },
+      "stock": 15,
+      "rating": 4.8,
+      "reviewCount": 412,
+      "isFeatured": true,
+      "freeDelivery": true,
+      "createdAt": "2024-01-03T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=600",
+      "updatedAt": "2024-01-03T00:00:00.000Z"
+    },
+    {
+      "id": 13,
+      "title": "Logitech B170 Wireless Mouse",
+      "slug": "logitech-b170",
+      "category": "accessories",
+      "brand": "Logitech",
+      "price": 799,
+      "discountPrice": 599,
+      "description": "Logitech B170 wireless mouse",
+      "images": [
+        "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=600"
+      ],
+      "specs": {
+        "connectivity": "2.4GHz Wireless",
+        "battery": "12 months",
+        "dpi": "1000"
+      },
+      "stock": 50,
+      "rating": 4.3,
+      "reviewCount": 678,
+      "isFeatured": false,
+      "freeDelivery": false,
+      "createdAt": "2024-01-13T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=600",
+      "updatedAt": "2024-01-13T00:00:00.000Z"
+    },
+    {
+      "id": 14,
+      "title": "Dell KM117 Wireless Keyboard & Mouse Combo",
+      "slug": "dell-km117",
+      "category": "accessories",
+      "brand": "Dell",
+      "price": 1499,
+      "discountPrice": 999,
+      "description": "Dell wireless keyboard and mouse combo",
+      "images": [
+        "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600"
+      ],
+      "specs": {
+        "connectivity": "2.4GHz Wireless",
+        "battery": "12 months"
+      },
+      "stock": 40,
+      "rating": 4.2,
+      "reviewCount": 234,
+      "isFeatured": false,
+      "freeDelivery": false,
+      "createdAt": "2024-01-14T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600",
+      "updatedAt": "2024-01-14T00:00:00.000Z"
+    },
+    {
+      "id": 15,
+      "title": "Apple MacBook Air M2 - (8 GB/256 GB SSD/macOS) MQKU3HN/A",
+      "slug": "apple-macbook-air-m2",
+      "category": "laptops",
+      "brand": "Apple",
+      "price": 134900,
+      "discountPrice": 119900,
+      "description": "Apple MacBook Air with M2 chip",
+      "images": [
+        "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=600"
+      ],
+      "specs": {
+        "processor": "Apple M2",
+        "ram": "8GB Unified",
+        "storage": "256GB SSD",
+        "display": "13.6\" Liquid Retina",
+        "os": "macOS"
+      },
+      "stock": 3,
+      "rating": 4.9,
+      "reviewCount": 567,
+      "isFeatured": true,
+      "freeDelivery": true,
+      "createdAt": "2024-01-15T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=600",
+      "updatedAt": "2024-01-15T00:00:00.000Z"
+    },
+    {
+      "id": 16,
+      "title": "Acer Aspire 5 Intel Core i5 12th Gen - (16 GB/512 GB SSD/Windows 11) A515-57",
+      "slug": "acer-aspire-5-i5",
+      "category": "laptops",
+      "brand": "Acer",
+      "price": 55999,
+      "discountPrice": 47999,
+      "description": "Acer Aspire 5 with powerful performance",
+      "images": [
+        "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600"
+      ],
+      "specs": {
+        "processor": "Intel Core i5-12450H",
+        "ram": "16GB DDR4",
+        "storage": "512GB SSD",
+        "display": "15.6\" FHD",
+        "os": "Windows 11"
+      },
+      "stock": 12,
+      "rating": 4.4,
+      "reviewCount": 198,
+      "isFeatured": false,
+      "freeDelivery": true,
+      "createdAt": "2024-01-16T00:00:00.000Z",
+      "image": "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600",
+      "updatedAt": "2024-01-16T00:00:00.000Z"
+    }
+  ],
+  "banners": [
+    {
+      "id": 1,
+      "title": "Laptop Sale",
+      "subtitle": "Up to 20% Off",
+      "image": "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=1200",
+      "link": "/products",
+      "active": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "title": "Gaming Desktops",
+      "subtitle": "Power Your Gaming",
+      "image": "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=1200",
+      "link": "/category/desktops",
+      "active": true,
+      "createdAt": "2024-01-02T00:00:00.000Z",
+      "updatedAt": "2024-01-02T00:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "title": "Office Essentials",
+      "subtitle": "Best Deals",
+      "image": "https://images.unsplash.com/photo-1591337676887-a217a6970a8a?w=1200",
+      "link": "/products",
+      "active": true,
+      "createdAt": "2024-01-03T00:00:00.000Z",
+      "updatedAt": "2024-01-03T00:00:00.000Z"
+    }
+  ]
+}
