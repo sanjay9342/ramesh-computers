@@ -4,14 +4,17 @@ import { FaFilter, FaChevronDown, FaChevronUp, FaStar } from 'react-icons/fa'
 import ProductCard from '../components/ProductCard'
 import { getAllProducts } from '../services/productService'
 
+const DEFAULT_MAX_PRICE = 1000000
+const normalizeCategory = (value = '') => value.toString().trim().toLowerCase()
+
 function Products() {
   const { slug } = useParams()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({
-    category: '',
+    category: slug ? normalizeCategory(slug) : '',
     brand: [],
-    priceRange: [0, 100000],
+    priceRange: [0, DEFAULT_MAX_PRICE],
     rating: 0,
   })
   const [sortBy, setSortBy] = useState('popularity')
@@ -28,9 +31,13 @@ function Products() {
   }, [])
 
   useEffect(() => {
-    if (slug) {
-      setFilters(prev => ({ ...prev, category: slug }))
-    }
+    setFilters(prev => ({
+      ...prev,
+      category: slug ? normalizeCategory(slug) : '',
+      brand: [],
+      priceRange: [0, DEFAULT_MAX_PRICE],
+      rating: 0,
+    }))
   }, [slug])
 
   const fetchProducts = async () => {
@@ -51,7 +58,7 @@ function Products() {
     
     // Category filter
     if (filters.category) {
-      filtered = filtered.filter(p => p.category === filters.category)
+      filtered = filtered.filter(p => normalizeCategory(p.category) === filters.category)
     }
     
     // Brand filter
@@ -191,7 +198,7 @@ function Products() {
                       <input
                         type="range"
                         min="0"
-                        max="200000"
+                        max={DEFAULT_MAX_PRICE}
                         step="5000"
                         value={filters.priceRange[1]}
                         onChange={(e) => handlePriceChange(e, 1)}
@@ -280,8 +287,8 @@ function Products() {
             {loading ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {[...Array(8)].map((_, i) => (
-                  <div key={i} className="bg-white rounded h-80 animate-pulse">
-                    <div className="h-48 bg-gray-200 m-4 rounded"></div>
+                  <div key={i} className="bg-white rounded h-72 sm:h-80 animate-pulse">
+                    <div className="h-44 sm:h-56 bg-gray-200 m-4 rounded"></div>
                     <div className="h-4 bg-gray-200 mx-4 mb-2 rounded"></div>
                     <div className="h-4 bg-gray-200 mx-4 w-2/3 rounded"></div>
                   </div>
@@ -290,7 +297,7 @@ function Products() {
             ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard key={product.id} product={product} imageClassName="h-44 sm:h-56" />
                 ))}
               </div>
             ) : (

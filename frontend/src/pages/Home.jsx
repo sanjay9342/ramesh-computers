@@ -25,6 +25,10 @@ function Home() {
   const [banners, setBanners] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeSlide, setActiveSlide] = useState(0)
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.innerWidth < 640
+  })
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,6 +47,16 @@ function Home() {
     fetchData()
   }, [])
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   const categories = [
     { name: 'Laptops', slug: 'laptops', icon: <FaLaptop size={28} /> },
     { name: 'Desktops', slug: 'desktops', icon: <FaDesktop size={28} /> },
@@ -53,12 +67,14 @@ function Home() {
   ]
 
   const brands = ['HP', 'Dell', 'Lenovo', 'ASUS', 'Acer', 'MSI', 'Apple', 'Samsung', 'LG', 'Canon']
+  const homeProductLimit = isMobile ? 4 : 8
+  const homeSkeletonCount = isMobile ? 4 : 8
 
-  const featuredProducts = products.filter((product) => product.isFeatured).slice(0, 8)
-  const laptops = products.filter((product) => product.category === 'laptops').slice(0, 8)
+  const featuredProducts = products.filter((product) => product.isFeatured).slice(0, homeProductLimit)
+  const laptops = products.filter((product) => product.category === 'laptops').slice(0, homeProductLimit)
   const newArrivals = [...products]
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-    .slice(0, 8)
+    .slice(0, homeProductLimit)
 
   const defaultBanners = useMemo(
     () => [
@@ -162,9 +178,9 @@ function Home() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {loading ? (
-              [...Array(5)].map((_, index) => (
+              [...Array(homeSkeletonCount)].map((_, index) => (
                 <div key={index} className="bg-white rounded h-72 animate-pulse">
-                  <div className="h-40 bg-gray-200 m-4 rounded" />
+                  <div className="h-56 bg-gray-200 m-4 rounded" />
                   <div className="h-4 bg-gray-200 mx-4 mb-2 rounded" />
                   <div className="h-4 bg-gray-200 mx-4 w-2/3 rounded" />
                 </div>
@@ -190,9 +206,9 @@ function Home() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {loading ? (
-            [...Array(5)].map((_, index) => (
+            [...Array(homeSkeletonCount)].map((_, index) => (
               <div key={index} className="bg-white rounded h-72 animate-pulse">
-                <div className="h-40 bg-gray-200 m-4 rounded" />
+                <div className="h-56 bg-gray-200 m-4 rounded" />
                 <div className="h-4 bg-gray-200 mx-4 mb-2 rounded" />
                 <div className="h-4 bg-gray-200 mx-4 w-2/3 rounded" />
               </div>
@@ -206,26 +222,28 @@ function Home() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">New Arrivals</h2>
-          <Link to="/products" className="text-fk-blue text-sm font-medium flex items-center gap-1 hover:underline">
-            View All <FaChevronRight />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {loading ? (
-            [...Array(5)].map((_, index) => (
-              <div key={index} className="bg-white rounded h-72 animate-pulse">
-                <div className="h-40 bg-gray-200 m-4 rounded" />
-                <div className="h-4 bg-gray-200 mx-4 mb-2 rounded" />
-                <div className="h-4 bg-gray-200 mx-4 w-2/3 rounded" />
-              </div>
-            ))
-          ) : newArrivals.length > 0 ? (
-            newArrivals.map((product) => <ProductCard key={product.id} product={product} />)
-          ) : (
-            <div className="col-span-full text-center py-8 text-gray-500">No new arrivals found.</div>
-          )}
+        <div className="bg-gradient-to-r from-[#edf7ff] to-[#fff4e8] rounded-3xl shadow-sm p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">New Arrivals</h2>
+            <Link to="/products" className="text-fk-blue text-sm font-medium flex items-center gap-1 hover:underline">
+              View All <FaChevronRight />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {loading ? (
+              [...Array(homeSkeletonCount)].map((_, index) => (
+                <div key={index} className="bg-white rounded h-72 animate-pulse">
+                  <div className="h-56 bg-gray-200 m-4 rounded" />
+                  <div className="h-4 bg-gray-200 mx-4 mb-2 rounded" />
+                  <div className="h-4 bg-gray-200 mx-4 w-2/3 rounded" />
+                </div>
+              ))
+            ) : newArrivals.length > 0 ? (
+              newArrivals.map((product) => <ProductCard key={product.id} product={product} />)
+            ) : (
+              <div className="col-span-full text-center py-8 text-gray-500">No new arrivals found.</div>
+            )}
+          </div>
         </div>
       </div>
 

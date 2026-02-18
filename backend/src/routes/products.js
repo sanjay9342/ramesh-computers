@@ -6,22 +6,36 @@ const productsCollection = firestore.collection('products')
 
 const normalizeProductInput = (input = {}) => {
   const image = input.image || input.images?.[0] || ''
+  const availableOffers = Array.isArray(input.availableOffers)
+    ? input.availableOffers
+      .map((offer) => String(offer || '').trim())
+      .filter(Boolean)
+    : (typeof input.availableOffers === 'string'
+      ? input.availableOffers
+        .split('\n')
+        .map((offer) => offer.trim())
+        .filter(Boolean)
+      : [])
+
   return {
-    title: input.title || '',
-    slug: input.slug || '',
-    category: input.category || '',
-    brand: input.brand || '',
+    title: String(input.title || '').trim(),
+    slug: String(input.slug || '').trim(),
+    category: String(input.category || '').trim().toLowerCase(),
+    brand: String(input.brand || '').trim(),
     price: Number(input.price || 0),
     discountPrice: input.discountPrice ? Number(input.discountPrice) : null,
-    description: input.description || '',
+    description: String(input.description || '').trim(),
     images: Array.isArray(input.images) && input.images.length > 0 ? input.images : (image ? [image] : []),
     image,
+    availableOffers,
+    warranty: String(input.warranty || '').trim(),
+    replacement: String(input.replacement || '').trim(),
     specs: input.specs || {},
     stock: Number(input.stock || 0),
     rating: Number(input.rating || 0),
     reviewCount: Number(input.reviewCount || 0),
     isFeatured: Boolean(input.isFeatured),
-    freeDelivery: Boolean(input.freeDelivery),
+    freeDelivery: input.freeDelivery !== false,
   }
 }
 
@@ -34,7 +48,10 @@ router.get('/', async (req, res, next) => {
     let products = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
 
     if (category) {
-      products = products.filter((p) => p.category === category)
+      const normalizedCategory = String(category).trim().toLowerCase()
+      products = products.filter(
+        (p) => String(p.category || '').trim().toLowerCase() === normalizedCategory
+      )
     }
 
     if (brand) {

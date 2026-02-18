@@ -86,14 +86,16 @@ function Header() {
           </form>
 
           {/* Right Section */}
-          <div className="flex items-center gap-5 md:gap-6 text-[#444444]">
+          <div className="flex items-center gap-7 md:gap-8 text-[#444444]">
             {isAuthenticated ? (
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 text-slate-800 font-semibold hover:text-fk-blue"
                 >
-                  <FaUser />
+                  <abbr title={user?.displayName || user?.email || 'Account'} className="no-underline">
+                    <FaUser />
+                  </abbr>
                   <span className="hidden sm:inline">{user?.displayName || 'Account'}</span>
                 </button>
                 {showUserMenu && (
@@ -121,6 +123,18 @@ function Header() {
                 Login
               </Link>
             )}
+
+            <Link to="/wishlist" className="flex items-center gap-2 text-slate-800 font-semibold hover:text-fk-blue">
+              <div className="relative">
+                <FaHeart className="text-xl" />
+                {wishlistItems.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-fk-yellow text-xs min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center">
+                    {wishlistItems.length}
+                  </span>
+                )}
+              </div>
+              <span className="hidden sm:inline">Wishlist</span>
+            </Link>
 
             {/* Cart always visible */}
             <Link to="/cart" className="flex items-center gap-2 text-slate-800 font-semibold hover:text-fk-blue">

@@ -7,9 +7,11 @@ import bannerRoutes from './routes/banners.js'
 import orderRoutes from './routes/orders.js'
 import uploadRoutes from './routes/upload.js'
 import adminRoutes from './routes/admin.js'
+import { runPendingOrderReminderSweep } from './lib/orderReminderSweep.js'
 
 const app = express()
 const PORT = process.env.PORT || 5000
+const orderReminderSweepMs = Number(process.env.ORDER_REMINDER_SWEEP_MS || 1800000)
 
 // ================= CORS FIX =================
 const allowedOrigins = [
@@ -57,4 +59,18 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
+
+  const runSweep = async () => {
+    try {
+      const sentCount = await runPendingOrderReminderSweep()
+      if (sentCount > 0) {
+        console.log(`Sent ${sentCount} pending-order reminder(s) to admin.`)
+      }
+    } catch (error) {
+      console.error('Pending-order reminder sweep failed:', error.message)
+    }
+  }
+
+  runSweep()
+  setInterval(runSweep, orderReminderSweepMs)
 })

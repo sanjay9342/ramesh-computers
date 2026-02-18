@@ -16,6 +16,8 @@ import {
 } from '../../services/bannerService'
 import { uploadImage } from '../../firebase/services/uploadService'
 
+const MAX_PRODUCT_IMAGES = 4
+
 const initialProductForm = {
   title: '',
   category: '',
@@ -25,7 +27,12 @@ const initialProductForm = {
   stock: '',
   rating: '',
   description: '',
+  availableOffers: '',
+  warranty: '',
+  replacement: '',
+  freeDelivery: true,
   image: '',
+  images: [],
   isFeatured: false,
 }
 
@@ -126,39 +133,96 @@ function AdminProducts() {
   }
 
   const handleImageUpload = async (event, type) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const input = event.target
+    const files = Array.from(event.target.files || [])
+    if (files.length === 0) return
 
     try {
       setUploading(true)
       const folder = type === 'banner' ? 'banners' : 'products'
-      const result = await uploadImage(file, folder)
 
       if (type === 'banner') {
+        const result = await uploadImage(files[0], folder)
         setBannerForm((prev) => ({ ...prev, image: result.url }))
+        toast.success('Image uploaded successfully!')
       } else {
-        setProductForm((prev) => ({ ...prev, image: result.url }))
+        const existingImages = Array.isArray(productForm.images) ? productForm.images : []
+        const remainingSlots = MAX_PRODUCT_IMAGES - existingImages.length
+
+        if (remainingSlots <= 0) {
+          toast.error(`Maximum ${MAX_PRODUCT_IMAGES} product images allowed`)
+          return
+        }
+
+        const filesToUpload = files.slice(0, remainingSlots)
+        if (files.length > remainingSlots) {
+          toast.info(`Only first ${remainingSlots} image(s) were uploaded`)
+        }
+
+        const results = await Promise.all(filesToUpload.map((file) => uploadImage(file, folder)))
+        const uploadedUrls = results.map((result) => result.url)
+
+        setProductForm((prev) => {
+          const mergedImages = [...(prev.images || []), ...uploadedUrls].slice(0, MAX_PRODUCT_IMAGES)
+          return {
+            ...prev,
+            images: mergedImages,
+            image: mergedImages[0] || '',
+          }
+        })
+        toast.success(`${uploadedUrls.length} image(s) uploaded successfully!`)
       }
-      toast.success('Image uploaded successfully!')
     } catch (error) {
       console.error('Error uploading image:', error)
     } finally {
+      input.value = ''
       setUploading(false)
     }
   }
 
+  const removeProductImage = (indexToRemove) => {
+    setProductForm((prev) => {
+      const updatedImages = (prev.images || []).filter((_, index) => index !== indexToRemove)
+      return {
+        ...prev,
+        images: updatedImages,
+        image: updatedImages[0] || '',
+      }
+    })
+  }
+
   const submitProduct = async (event) => {
     event.preventDefault()
+    const normalizedOffers = (productForm.availableOffers || '')
+      .split('\n')
+      .map((offer) => offer.trim())
+      .filter(Boolean)
+    const normalizedWarranty = productForm.warranty.trim()
+    const normalizedReplacement = productForm.replacement.trim()
+    const normalizedFreeDelivery = Boolean(productForm.freeDelivery)
+
     const payload = {
       title: productForm.title.trim(),
-      category: productForm.category,
+      category: productForm.category.trim().toLowerCase(),
       brand: productForm.brand.trim(),
       price: Number(productForm.price),
       discountPrice: productForm.discountPrice ? Number(productForm.discountPrice) : null,
       stock: Number(productForm.stock),
       rating: productForm.rating ? Number(productForm.rating) : 0,
       description: productForm.description.trim(),
-      image: productForm.image,
+      availableOffers: normalizedOffers,
+      warranty: normalizedWarranty,
+      replacement: normalizedReplacement,
+      freeDelivery: normalizedFreeDelivery,
+      specs: {
+        ...(editingProduct?.specs || {}),
+        availableOffers: normalizedOffers,
+        warranty: normalizedWarranty,
+        replacement: normalizedReplacement,
+        freeDelivery: normalizedFreeDelivery,
+      },
+      images: (productForm.images || []).slice(0, MAX_PRODUCT_IMAGES),
+      image: (productForm.images || [])[0] || productForm.image || '',
       isFeatured: Boolean(productForm.isFeatured),
     }
 
@@ -168,6 +232,7 @@ function AdminProducts() {
       } else {
         await createProduct(payload)
       }
+      toast.success(editingProduct ? 'Product updated successfully' : 'Product created successfully')
       await fetchProducts()
       closeProductModal()
     } catch (error) {
@@ -202,6 +267,11 @@ function AdminProducts() {
 
   const openEditProduct = (product) => {
     setEditingProduct(product)
+    const images =
+      Array.isArray(product.images) && product.images.length > 0
+        ? product.images
+        : (product.image ? [product.image] : [])
+
     setProductForm({
       title: product.title || '',
       category: product.category || '',
@@ -211,7 +281,18 @@ function AdminProducts() {
       stock: product.stock?.toString() || '',
       rating: product.rating?.toString() || '',
       description: product.description || '',
-      image: product.image || product.images?.[0] || '',
+      availableOffers: Array.isArray(product.availableOffers)
+        ? product.availableOffers.join('\n')
+        : (Array.isArray(product.specs?.availableOffers)
+          ? product.specs.availableOffers.join('\n')
+          : (typeof product.specs?.availableOffers === 'string' ? product.specs.availableOffers : '')),
+      warranty: product.warranty || product.specs?.warranty || '',
+      replacement: product.replacement || product.specs?.replacement || '',
+      freeDelivery: typeof product.freeDelivery === 'boolean'
+        ? product.freeDelivery
+        : (typeof product.specs?.freeDelivery === 'boolean' ? product.specs.freeDelivery : true),
+      image: images[0] || '',
+      images: images.slice(0, MAX_PRODUCT_IMAGES),
       isFeatured: Boolean(product.isFeatured),
     })
     setShowProductModal(true)
@@ -356,10 +437,19 @@ function AdminProducts() {
               {filteredProducts.map((product) => (
                 <tr key={product.id} className="border-t hover:bg-gray-50">
                   <td className="py-3 px-4">
-                    {product.image ? (
-                      <img src={product.image} alt={product.title} className="w-12 h-12 object-cover rounded" />
+                    {(product.image || product.images?.[0]) ? (
+                      <div className="space-y-1">
+                        <img
+                          src={product.image || product.images?.[0]}
+                          alt={product.title}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                        {Array.isArray(product.images) && product.images.length > 1 && (
+                          <span className="text-xs text-gray-500">{product.images.length} images</span>
+                        )}
+                      </div>
                     ) : (
-                      <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
+                      <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
                         No image
                       </div>
                     )}
@@ -576,19 +666,90 @@ function AdminProducts() {
                 />
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Warranty</label>
+                  <input
+                    type="text"
+                    name="warranty"
+                    value={productForm.warranty}
+                    onChange={handleProductInputChange}
+                    placeholder="1 Year Warranty"
+                    className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:border-fk-blue"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Replacement</label>
+                  <input
+                    type="text"
+                    name="replacement"
+                    value={productForm.replacement}
+                    onChange={handleProductInputChange}
+                    placeholder="7 Days Replacement"
+                    className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:border-fk-blue"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Available Offers (one offer per line)
+                </label>
+                <textarea
+                  name="availableOffers"
+                  rows="4"
+                  value={productForm.availableOffers}
+                  onChange={handleProductInputChange}
+                  placeholder={'Bank Offer: 5% cashback\nNo Cost EMI available'}
+                  className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:border-fk-blue"
+                />
+              </div>
+
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  name="freeDelivery"
+                  checked={Boolean(productForm.freeDelivery)}
+                  onChange={handleProductInputChange}
+                />
+                Show free delivery
+              </label>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Product Images (up to {MAX_PRODUCT_IMAGES})
+                </label>
                 <div className="flex items-center gap-3">
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={(event) => handleImageUpload(event, 'product')}
                     className="border border-gray-300 rounded px-4 py-2 w-full"
                   />
                   {uploading && <span className="text-sm text-gray-500">Uploading...</span>}
                 </div>
-                {productForm.image && (
-                  <img src={productForm.image} alt="Preview" className="w-24 h-24 object-cover rounded mt-2" />
+                <p className="text-xs text-gray-500 mt-1">
+                  First image will be used as the main product image.
+                </p>
+                {productForm.images?.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3">
+                    {productForm.images.map((img, index) => (
+                      <div key={`${img}-${index}`} className="relative rounded overflow-hidden border border-gray-200">
+                        <img src={img} alt={`Preview ${index + 1}`} className="w-full h-24 object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeProductImage(index)}
+                          className="absolute top-1 right-1 bg-black/65 text-white rounded-full p-1"
+                          aria-label={`Remove image ${index + 1}`}
+                        >
+                          <FaTimes size={10} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500 mt-2">No product images uploaded yet.</p>
                 )}
               </div>
 

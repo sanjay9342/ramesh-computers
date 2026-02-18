@@ -5,6 +5,7 @@ import { sendAdminOrderAlert, sendCustomerOrderStatusEmail } from '../lib/notifi
 
 const router = express.Router()
 const ordersCollection = firestore.collection('orders')
+const productsCollection = firestore.collection('products')
 const allowedStatuses = ['confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled']
 
 const sortOrdersByDateDesc = (orders) =>
@@ -53,28 +54,101 @@ router.post('/', async (req, res, next) => {
       return res.status(400).json({ error: 'userId, items, totalAmount, and shippingAddress are required' })
     }
 
+    const normalizedItems = items.map((item) => ({
+      id: String(item?.id || '').trim(),
+      title: String(item?.title || '').trim(),
+      image: item?.image || '',
+      price: Number(item?.price || 0),
+      quantity: Number(item?.quantity || 1),
+    }))
+
+    const hasInvalidItem = normalizedItems.some(
+      (item) => !item.id || item.quantity <= 0 || !Number.isFinite(item.quantity)
+    )
+    if (hasInvalidItem) {
+      return res.status(400).json({ error: 'Invalid order item data' })
+    }
+
     const resolvedPaymentMethod = paymentMethod || 'cod'
+    const now = new Date().toISOString()
+    const orderRef = ordersCollection.doc()
+    const quantityByProductId = normalizedItems.reduce((acc, item) => {
+      const existing = acc.get(item.id)
+      if (existing) {
+        existing.quantity += item.quantity
+      } else {
+        acc.set(item.id, {
+          id: item.id,
+          title: item.title,
+          quantity: item.quantity,
+        })
+      }
+      return acc
+    }, new Map())
+    const stockAdjustments = Array.from(quantityByProductId.values())
     const newOrder = {
       userId,
       userEmail: userEmail || '',
-      items,
+      items: normalizedItems,
       totalAmount: Number(totalAmount),
       status: 'confirmed',
       paymentMethod: resolvedPaymentMethod,
       paymentStatus: resolvedPaymentMethod === 'cod' ? 'pending' : 'paid',
       paymentId: paymentId || null,
       shippingAddress,
-      orderedAt: new Date().toISOString(),
+      orderedAt: now,
     }
 
-    const ref = await ordersCollection.add(newOrder)
-    const createdOrder = { id: ref.id, ...newOrder }
+    await firestore.runTransaction(async (transaction) => {
+      const productRefs = stockAdjustments.map((item) => productsCollection.doc(item.id))
+      const productDocs = await Promise.all(productRefs.map((ref) => transaction.get(ref)))
+
+      const updates = []
+      for (let index = 0; index < stockAdjustments.length; index += 1) {
+        const item = stockAdjustments[index]
+        const productDoc = productDocs[index]
+        if (!productDoc.exists) {
+          throw new Error(`Product not found: ${item.title || item.id}`)
+        }
+
+        const productData = productDoc.data() || {}
+        const currentStock = Number(productData.stock || 0)
+        if (currentStock < item.quantity) {
+          const productTitle = productData.title || item.title || item.id
+          throw new Error(
+            `Insufficient stock for "${productTitle}". Available: ${currentStock}, requested: ${item.quantity}`
+          )
+        }
+
+        updates.push({
+          productRef: productRefs[index],
+          nextStock: currentStock - item.quantity,
+        })
+      }
+
+      updates.forEach(({ productRef, nextStock }) => {
+        transaction.update(productRef, {
+          stock: nextStock,
+          updatedAt: now,
+        })
+      })
+
+      transaction.set(orderRef, newOrder)
+    })
+
+    const createdOrder = { id: orderRef.id, ...newOrder }
     await sendAdminOrderAlert(createdOrder).catch((error) => console.error('Failed to notify admin:', error.message))
     await sendCustomerOrderStatusEmail(createdOrder, 'confirmed').catch((error) =>
       console.error('Failed to notify customer:', error.message)
     )
     res.status(201).json(createdOrder)
   } catch (error) {
+    if (
+      error?.message?.startsWith('Insufficient stock') ||
+      error?.message?.startsWith('Product not found')
+    ) {
+      return res.status(400).json({ error: error.message })
+    }
     next(error)
   }
 })

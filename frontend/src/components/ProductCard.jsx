@@ -6,7 +6,7 @@ import { toast } from 'react-toastify'
 import { addToCart } from '../redux/slices/cartSlice'
 import { addToWishlist, removeFromWishlist } from '../redux/slices/wishlistSlice'
 
-function ProductCard({ product }) {
+function ProductCard({ product, imageClassName = 'h-56' }) {
   const dispatch = useDispatch()
   const { items: wishlistItems } = useSelector((state) => state.wishlist)
   
@@ -58,7 +58,7 @@ function ProductCard({ product }) {
         <img
           src={product.images?.[0] || 'https://via.placeholder.com/300'}
           alt={product.title}
-          className="w-full h-48 object-contain mx-auto"
+          className={`w-full ${imageClassName} object-contain mx-auto`}
         />
         
         {/* Wishlist Button */}

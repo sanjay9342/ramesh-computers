@@ -62,13 +62,25 @@ function ProductDetails() {
   }
 
   const isInWishlist = product && wishlistItems.some(item => item.id === product.id)
+  const productImages = Array.isArray(product?.images) && product.images.length > 0
+    ? product.images
+    : (product?.image ? [product.image] : [])
+  const selectedProductImage =
+    productImages[selectedImage] ||
+    productImages[0] ||
+    product?.image ||
+    'https://via.placeholder.com/600'
+
+  useEffect(() => {
+    setSelectedImage(0)
+  }, [product?.id])
 
   const handleAddToCart = () => {
     dispatch(addToCart({
       id: product.id,
       title: product.title,
       price: product.discountPrice || product.price,
-      image: product.image || product.images?.[selectedImage] || 'https://via.placeholder.com/300',
+      image: selectedProductImage,
       quantity,
     }))
     toast.success('Added to cart!')
@@ -114,9 +126,18 @@ function ProductDetails() {
   const discountPercentage = product.discountPrice 
     ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
     : 0
-
-  const productImage = product.image || (product.images && product.images[selectedImage]) || 'https://via.placeholder.com/600'
-  const productImages = product.images || (product.image ? [product.image] : [])
+  const rawOffers = product.availableOffers ?? product.specs?.availableOffers
+  const availableOffers = Array.isArray(rawOffers)
+    ? rawOffers.map((offer) => String(offer || '').trim()).filter(Boolean)
+    : (typeof rawOffers === 'string'
+      ? rawOffers.split('\n').map((offer) => offer.trim()).filter(Boolean)
+      : [])
+  const showFreeDelivery = typeof product.freeDelivery === 'boolean'
+    ? product.freeDelivery
+    : (typeof product.specs?.freeDelivery === 'boolean' ? product.specs.freeDelivery : true)
+  const warrantyText = String(product.warranty || product.specs?.warranty || '').trim()
+  const replacementText = String(product.replacement || product.specs?.replacement || '').trim()
+  const hasSupportInfo = showFreeDelivery || Boolean(warrantyText) || Boolean(replacementText)
 
   const renderStars = (rating) => {
     const stars = []
@@ -148,9 +169,9 @@ function ProductDetails() {
             <div>
               <div className="border border-gray-200 rounded p-4 mb-4">
                 <img
-                  src={productImage}
+                  src={selectedProductImage}
                   alt={product.title}
-                  className="w-full h-80 object-contain"
+                  className="w-full h-96 object-contain"
                 />
               </div>
               {productImages.length > 1 && (
@@ -161,7 +182,7 @@ function ProductDetails() {
                       onClick={() => setSelectedImage(index)}
                       className={`border-2 rounded p-1 flex-shrink-0 ${selectedImage === index ? 'border-fk-blue' : 'border-gray-200'}`}
                     >
-                      <img src={img} alt="" className="w-16 h-16 object-contain" />
+                      <img src={img} alt="" className="w-20 h-20 object-contain" />
                     </button>
                   ))}
                 </div>
@@ -177,8 +198,12 @@ function ProductDetails() {
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex">{renderStars(Math.round(product.rating || 0))}</div>
                 <span className="text-sm text-gray-500">{product.rating} ratings</span>
-                <span className="text-sm text-gray-500">|</span>
-                <span className="text-sm text-gray-500">{product.reviewCount || 0} reviews</span>
+                {Number(product.reviewCount || 0) > 0 && (
+                  <>
+                    <span className="text-sm text-gray-500">|</span>
+                    <span className="text-sm text-gray-500">{product.reviewCount} reviews</span>
+                  </>
+                )}
               </div>
 
               {/* Price */}
@@ -202,18 +227,16 @@ function ProductDetails() {
               <div className="mb-6">
                 <p className="font-bold text-gray-800 mb-2">Available Offers</p>
                 <ul className="space-y-1">
-                  <li className="flex items-center gap-2 text-sm">
-                    <FaCheck className="text-fk-teal text-xs" />
-                    <span>Bank Offer: 5% Unlimited Cashback on Flipkart Axis Bank Credit Card</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-sm">
-                    <FaCheck className="text-fk-teal text-xs" />
-                    <span>Special Price: Get ₹2000 off on exchange</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-sm">
-                    <FaCheck className="text-fk-teal text-xs" />
-                    <span>No Cost EMI starting from ₹2,556/month</span>
-                  </li>
+                  {availableOffers.length > 0 ? (
+                    availableOffers.map((offer, index) => (
+                      <li key={`${offer}-${index}`} className="flex items-center gap-2 text-sm">
+                        <FaCheck className="text-fk-teal text-xs" />
+                        <span>{offer}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-sm text-gray-500">No offers added for this product.</li>
+                  )}
                 </ul>
               </div>
 
@@ -224,20 +247,30 @@ function ProductDetails() {
                 ) : (
                   <p className="text-red-500 font-medium mb-2">Out of Stock</p>
                 )}
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <FaTruck />
-                    <span>Free Delivery</span>
+                {hasSupportInfo ? (
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    {showFreeDelivery && (
+                      <div className="flex items-center gap-1">
+                        <FaTruck />
+                        <span>Free Delivery</span>
+                      </div>
+                    )}
+                    {warrantyText && (
+                      <div className="flex items-center gap-1">
+                        <FaShieldAlt />
+                        <span>{warrantyText}</span>
+                      </div>
+                    )}
+                    {replacementText && (
+                      <div className="flex items-center gap-1">
+                        <FaUndo />
+                        <span>{replacementText}</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-1">
-                    <FaShieldAlt />
-                    <span>1 Year Warranty</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <FaUndo />
-                    <span>7 Days Replacement</span>
-                  </div>
-                </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No warranty/replacement details added.</p>
+                )}
               </div>
 
               {/* Quantity & Add to Cart */}
@@ -305,3 +338,4 @@ function ProductDetails() {
 }
 
 export default ProductDetails
+

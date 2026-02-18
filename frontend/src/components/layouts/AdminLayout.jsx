@@ -38,6 +38,8 @@ function AdminLayout() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const notificationsRef = useRef(null)
+  const hasLoadedNotificationsRef = useRef(false)
+  const seenOrderIdsRef = useRef(seenOrderIds)
 
   const menuItems = [
     { path: '/admin', icon: <FaTachometerAlt />, label: 'Dashboard' },
@@ -57,11 +59,29 @@ function AdminLayout() {
       const confirmed = allOrders
         .filter((order) => order.status === 'confirmed')
         .sort((a, b) => new Date(b.orderedAt || 0) - new Date(a.orderedAt || 0))
-      setConfirmedOrders(confirmed)
+      setConfirmedOrders((previousConfirmedOrders) => {
+        const previousIds = new Set(previousConfirmedOrders.map((order) => order.id))
+        const newUnseenOrders = confirmed.filter(
+          (order) => !previousIds.has(order.id) && !seenOrderIdsRef.current.includes(order.id)
+        )
+
+        if (hasLoadedNotificationsRef.current && newUnseenOrders.length > 0) {
+          const latestOrder = newUnseenOrders[0]
+          toast.info(
+            `New order ${latestOrder.id} from ${latestOrder.shippingAddress?.name || 'Customer'} is awaiting action.`
+          )
+        }
+        hasLoadedNotificationsRef.current = true
+        return confirmed
+      })
     } catch (error) {
       console.error('Failed to fetch admin notifications:', error)
     }
   }
+
+  useEffect(() => {
+    seenOrderIdsRef.current = seenOrderIds
+  }, [seenOrderIds])
 
   useEffect(() => {
     fetchConfirmedOrders()
