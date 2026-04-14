@@ -234,6 +234,7 @@ const initialState = {
   loading: false,
   error: null,
   isAuthenticated: false,
+  verificationEmail: null,
 }
 
 const userSlice = createSlice({
@@ -260,6 +261,7 @@ const userSlice = createSlice({
         state.loading = false
         state.user = action.payload
         state.isAuthenticated = true
+        state.verificationEmail = null
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false
@@ -272,8 +274,9 @@ const userSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false
-        state.user = action.payload
-        state.isAuthenticated = true
+        state.user = null
+        state.isAuthenticated = false
+        state.verificationEmail = action.payload?.email || null
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false
@@ -284,6 +287,7 @@ const userSlice = createSlice({
         state.user = null
         state.isAuthenticated = false
         state.loading = false
+        state.verificationEmail = null
       })
       // Resend verification
       .addCase(resendVerificationEmail.pending, (state) => {

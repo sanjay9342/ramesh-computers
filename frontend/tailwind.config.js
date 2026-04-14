@@ -8,20 +8,21 @@ export default {
     extend: {
       colors: {
         fk: {
-          blue: '#2874f0',
-          'blue-dark': '#1a5dc9',
-          yellow: '#ff9f00',
-          teal: '#00bfa5',
-          bg: '#f1f3f6',
-          border: '#e0e0e0',
+          blue: '#b326b6',
+          'blue-dark': '#851d88',
+          yellow: '#cb47ca',
+          'yellow-dark': '#a72ea8',
+          teal: '#e17adf',
+          bg: '#fff7fd',
+          border: '#efd8ef',
         }
       },
       fontFamily: {
         roboto: ['Roboto', 'sans-serif'],
       },
       boxShadow: {
-        'fk': '0 2px 8px rgba(0,0,0,0.1)',
-        'fk-hover': '0 4px 12px rgba(0,0,0,0.15)',
+        'fk': '0 12px 30px rgba(133, 29, 136, 0.10)',
+        'fk-hover': '0 18px 40px rgba(203, 71, 202, 0.18)',
       }
     },
   },

@@ -15,11 +15,13 @@ import {
   toggleBannerStatus,
 } from '../../services/bannerService'
 import { uploadImage } from '../../firebase/services/uploadService'
+import { PRODUCT_CATEGORIES } from '../../data/storeInfo'
 
 const MAX_PRODUCT_IMAGES = 4
 
 const initialProductForm = {
   title: '',
+  sku: '',
   category: '',
   brand: '',
   price: '',
@@ -27,6 +29,8 @@ const initialProductForm = {
   stock: '',
   rating: '',
   description: '',
+  highlights: '',
+  specifications: '',
   availableOffers: '',
   warranty: '',
   replacement: '',
@@ -116,6 +120,23 @@ function AdminProducts() {
     }
   }, [products])
 
+  const parseSpecificationLines = (value) =>
+    Object.fromEntries(
+      String(value || '')
+        .split('\n')
+        .map((line) => line.split(':'))
+        .filter((parts) => parts.length >= 2)
+        .map(([key, ...rest]) => [key.trim(), rest.join(':').trim()])
+        .filter(([key, itemValue]) => key && itemValue)
+    )
+
+  const stringifySpecifications = (specs = {}) =>
+    Object.entries(specs || {})
+      .filter(([key]) => !['availableOffers', 'warranty', 'replacement', 'freeDelivery'].includes(key))
+      .filter(([key, value]) => key && value)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join('\n')
+
   const handleProductInputChange = (event) => {
     const { name, value, type, checked } = event.target
     setProductForm((prev) => ({
@@ -197,12 +218,18 @@ function AdminProducts() {
       .split('\n')
       .map((offer) => offer.trim())
       .filter(Boolean)
+    const normalizedHighlights = (productForm.highlights || '')
+      .split('\n')
+      .map((item) => item.trim())
+      .filter(Boolean)
     const normalizedWarranty = productForm.warranty.trim()
     const normalizedReplacement = productForm.replacement.trim()
     const normalizedFreeDelivery = Boolean(productForm.freeDelivery)
+    const normalizedSpecs = parseSpecificationLines(productForm.specifications)
 
     const payload = {
       title: productForm.title.trim(),
+      sku: productForm.sku.trim().toUpperCase(),
       category: productForm.category.trim().toLowerCase(),
       brand: productForm.brand.trim(),
       price: Number(productForm.price),
@@ -210,16 +237,13 @@ function AdminProducts() {
       stock: Number(productForm.stock),
       rating: productForm.rating ? Number(productForm.rating) : 0,
       description: productForm.description.trim(),
+      highlights: normalizedHighlights,
       availableOffers: normalizedOffers,
       warranty: normalizedWarranty,
       replacement: normalizedReplacement,
       freeDelivery: normalizedFreeDelivery,
       specs: {
-        ...(editingProduct?.specs || {}),
-        availableOffers: normalizedOffers,
-        warranty: normalizedWarranty,
-        replacement: normalizedReplacement,
-        freeDelivery: normalizedFreeDelivery,
+        ...normalizedSpecs,
       },
       images: (productForm.images || []).slice(0, MAX_PRODUCT_IMAGES),
       image: (productForm.images || [])[0] || productForm.image || '',
@@ -274,6 +298,7 @@ function AdminProducts() {
 
     setProductForm({
       title: product.title || '',
+      sku: product.sku || '',
       category: product.category || '',
       brand: product.brand || '',
       price: product.price?.toString() || '',
@@ -281,6 +306,8 @@ function AdminProducts() {
       stock: product.stock?.toString() || '',
       rating: product.rating?.toString() || '',
       description: product.description || '',
+      highlights: Array.isArray(product.highlights) ? product.highlights.join('\n') : '',
+      specifications: stringifySpecifications(product.specs),
       availableOffers: Array.isArray(product.availableOffers)
         ? product.availableOffers.join('\n')
         : (Array.isArray(product.specs?.availableOffers)
@@ -454,7 +481,10 @@ function AdminProducts() {
                       </div>
                     )}
                   </td>
-                  <td className="py-3 px-4 font-medium">{product.title}</td>
+                  <td className="py-3 px-4">
+                    <div className="font-medium">{product.title}</div>
+                    {product.sku ? <div className="text-xs text-gray-500">{product.sku}</div> : null}
+                  </td>
                   <td className="py-3 px-4 capitalize">{product.category}</td>
                   <td className="py-3 px-4">{product.brand}</td>
                   <td className="py-3 px-4">
@@ -522,7 +552,7 @@ function AdminProducts() {
                     </div>
                     <span
                       className={`text-xs px-2 py-1 rounded ${
-                        banner.active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700'
+                        banner.active ? 'bg-fk-yellow text-white' : 'bg-gray-200 text-gray-700'
                       }`}
                     >
                       {banner.active ? 'Active' : 'Inactive'}
@@ -536,7 +566,7 @@ function AdminProducts() {
                     >
                       {banner.active ? 'Deactivate' : 'Activate'}
                     </button>
-                    <button onClick={() => openEditBanner(banner)} className="text-fk-blue p-2 hover:bg-blue-50 rounded">
+                    <button onClick={() => openEditBanner(banner)} className="text-fk-blue p-2 hover:bg-fk-bg rounded">
                       <FaEdit />
                     </button>
                     <button onClick={() => confirmDeleteBanner(banner)} className="text-red-500 p-2 hover:bg-red-50 rounded">
@@ -572,6 +602,18 @@ function AdminProducts() {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+                <input
+                  type="text"
+                  name="sku"
+                  value={productForm.sku}
+                  onChange={handleProductInputChange}
+                  placeholder="LP-HP-15S-001"
+                  className="w-full border border-gray-300 rounded px-4 py-2 uppercase focus:outline-none focus:border-fk-blue"
+                />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
@@ -583,12 +625,11 @@ function AdminProducts() {
                     required
                   >
                     <option value="">Select category</option>
-                    <option value="laptops">Laptops</option>
-                    <option value="desktops">Desktops</option>
-                    <option value="speakers">Speakers</option>
-                    <option value="printers">Printers</option>
-                    <option value="cctv">CCTV</option>
-                    <option value="accessories">Accessories</option>
+                    {PRODUCT_CATEGORIES.map((category) => (
+                      <option key={category.slug} value={category.slug}>
+                        {category.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -666,6 +707,20 @@ function AdminProducts() {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Highlights (one per line)
+                </label>
+                <textarea
+                  name="highlights"
+                  rows="4"
+                  value={productForm.highlights}
+                  onChange={handleProductInputChange}
+                  placeholder={'12th Gen Intel Core i5\n16GB RAM\n512GB SSD'}
+                  className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:border-fk-blue"
+                />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Warranty</label>
@@ -701,6 +756,20 @@ function AdminProducts() {
                   value={productForm.availableOffers}
                   onChange={handleProductInputChange}
                   placeholder={'Bank Offer: 5% cashback\nNo Cost EMI available'}
+                  className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:border-fk-blue"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Specifications (use Key: Value)
+                </label>
+                <textarea
+                  name="specifications"
+                  rows="5"
+                  value={productForm.specifications}
+                  onChange={handleProductInputChange}
+                  placeholder={'Processor: Intel Core i5\nRAM: 16GB\nStorage: 512GB SSD'}
                   className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:border-fk-blue"
                 />
               </div>

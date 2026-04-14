@@ -2,23 +2,14 @@ import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 
-// Replace with your Firebase configuration from Firebase Console
 const firebaseConfig = {
-  apiKey: "AIzaSyD7dSePFNwcRiiRaV1PWmQo95H0A-FqLBw",
-  authDomain: "ramesh-computers.firebaseapp.com",
-  projectId: "ramesh-computers",
-  storageBucket: "ramesh-computers.firebasestorage.app",
-  messagingSenderId: "644005356681",
-  appId: "1:644005356681:web:b176f412d052c44fa3d258"
-};
-
-// Cloudinary configuration
-// Replace these with your Cloudinary credentials from Cloudinary Dashboard
-const cloudinaryConfig = {
-  cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'demo',
-  apiKey: import.meta.env.VITE_CLOUDINARY_API_KEY || '',
-  uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'ml_default'
-};
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyD7dSePFNwcRiiRaV1PWmQo95H0A-FqLBw',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'ramesh-computers.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'ramesh-computers',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'ramesh-computers.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '644005356681',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:644005356681:web:b176f412d052c44fa3d258',
+}
 
 // Initialize Firebase only if valid config is provided
 let app = null
@@ -38,6 +29,6 @@ try {
   console.error('Firebase initialization error:', error)
 }
 
-export { auth, db, cloudinaryConfig }
+export { auth, db }
 export default app
 

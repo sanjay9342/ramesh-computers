@@ -1,5 +1,6 @@
 import express from 'express'
 import { firestore } from '../lib/firebaseAdmin.js'
+import { requireAdmin } from '../middleware/auth.js'
 
 const router = express.Router()
 const bannersCollection = firestore.collection('banners')
@@ -42,7 +43,7 @@ router.get('/:id', async (req, res, next) => {
   }
 })
 
-router.post('/', async (req, res, next) => {
+router.post('/', requireAdmin, async (req, res, next) => {
   try {
     const payload = normalizeBannerInput(req.body)
     if (!payload.title || !payload.image) {
@@ -63,7 +64,7 @@ router.post('/', async (req, res, next) => {
   }
 })
 
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', requireAdmin, async (req, res, next) => {
   try {
     const docRef = bannersCollection.doc(req.params.id)
     const existing = await docRef.get()
@@ -84,7 +85,7 @@ router.put('/:id', async (req, res, next) => {
   }
 })
 
-router.patch('/:id/status', async (req, res, next) => {
+router.patch('/:id/status', requireAdmin, async (req, res, next) => {
   try {
     const { active } = req.body
     if (active === undefined) {
@@ -110,7 +111,7 @@ router.patch('/:id/status', async (req, res, next) => {
   }
 })
 
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', requireAdmin, async (req, res, next) => {
   try {
     const docRef = bannersCollection.doc(req.params.id)
     const existing = await docRef.get()

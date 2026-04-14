@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react'
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaClock, FaLocationArrow } from 'react-icons/fa'
 import { toast } from 'react-toastify'
+import { CONTACT_NUMBERS, STORE_INFO } from '../data/storeInfo'
 
-const defaultCoords = { lat: 13.0827, lon: 80.2707 } // Chennai as default
+const defaultCoords = STORE_INFO.mapCoords
 
 const buildOsmEmbed = ({ lat, lon }) => {
   const delta = 0.01
@@ -50,7 +51,7 @@ function Contact() {
 
   return (
     <div className="bg-fk-bg min-h-screen py-8">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-0">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded shadow-fk overflow-hidden">
             <div className="h-96">
@@ -76,34 +77,55 @@ function Contact() {
 
           <div className="bg-white rounded shadow-fk p-6 space-y-4">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Contact Us</h1>
-            <p className="text-gray-600">We’re here to help with product questions, orders, and support.</p>
+            <p className="text-gray-600">
+              We are here to help with computers, solar panels, solar lights, LED TV, stabilizers, DTH set-top boxes, and CCTV support.
+            </p>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <FaMapMarkerAlt className="text-fk-blue mt-1" />
                 <div>
                   <p className="font-semibold text-gray-800">Store & Service Center</p>
-                  <p className="text-gray-600">123 Anna Salai, Chennai, Tamil Nadu 600002</p>
+                  <p className="text-gray-600">{STORE_INFO.address}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <FaPhoneAlt className="text-fk-blue mt-1" />
-                <div>
-                  <p className="font-semibold text-gray-800">Call</p>
-                  <p className="text-gray-600">+91 98765 43210</p>
+              {CONTACT_NUMBERS.map((phone) => (
+                <div key={phone.digits} className="flex items-start gap-3">
+                  <FaPhoneAlt className="text-fk-blue mt-1" />
+                  <div>
+                    <p className="font-semibold text-gray-800">Phone</p>
+                    <a href={`tel:${phone.tel}`} className="text-gray-600 hover:text-fk-blue transition-colors">
+                      {phone.display}
+                    </a>
+                  </div>
                 </div>
-              </div>
+              ))}
               <div className="flex items-start gap-3">
                 <FaEnvelope className="text-fk-blue mt-1" />
                 <div>
                   <p className="font-semibold text-gray-800">Email</p>
-                  <p className="text-gray-600">support@rameshcomputers.com</p>
+                  <a href={`mailto:${STORE_INFO.email}`} className="text-gray-600 hover:text-fk-blue transition-colors">
+                    {STORE_INFO.email}
+                  </a>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <FaClock className="text-fk-blue mt-1" />
                 <div>
                   <p className="font-semibold text-gray-800">Hours</p>
-                  <p className="text-gray-600">Mon–Sat: 9:30 AM – 8:00 PM</p>
+                  <p className="text-gray-600">{STORE_INFO.hours}</p>
+                </div>
+              </div>
+              <div className="pt-3 border-t border-gray-100">
+                <p className="font-semibold text-gray-800 mb-2">Available</p>
+                <div className="flex flex-wrap gap-2">
+                  {STORE_INFO.services.map((service) => (
+                    <span
+                      key={service}
+                      className="rounded-full border border-fk-border bg-fk-bg px-3 py-1 text-xs font-semibold text-[#6f5a66]"
+                    >
+                      {service}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>

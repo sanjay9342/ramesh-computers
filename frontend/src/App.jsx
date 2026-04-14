@@ -14,6 +14,7 @@ import Cart from './pages/Cart'
 import Wishlist from './pages/Wishlist'
 import Checkout from './pages/Checkout'
 import Orders from './pages/Orders'
+import OrderDetails from './pages/OrderDetails'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Contact from './pages/Contact'
@@ -22,6 +23,8 @@ import Policies from './pages/Policies'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminProducts from './pages/admin/Products'
 import AdminOrders from './pages/admin/Orders'
+import AdminCoupons from './pages/admin/Coupons'
+import AdminCustomers from './pages/admin/Customers'
 
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
@@ -40,6 +43,11 @@ function App() {
   }, [dispatch])
 
   useEffect(() => {
+    if (!auth) {
+      dispatch(setUser(null))
+      return undefined
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         dispatch(setUser(null))
@@ -97,6 +105,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="orders/:id"
+          element={
+            <ProtectedRoute>
+              <OrderDetails />
+            </ProtectedRoute>
+          }
+        />
       </Route>
 
       <Route
@@ -110,6 +126,8 @@ function App() {
         <Route index element={<AdminDashboard />} />
         <Route path="products" element={<AdminProducts />} />
         <Route path="orders" element={<AdminOrders />} />
+        <Route path="coupons" element={<AdminCoupons />} />
+        <Route path="customers" element={<AdminCustomers />} />
       </Route>
 
       <Route

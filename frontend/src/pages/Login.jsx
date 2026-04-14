@@ -79,7 +79,7 @@ function Login() {
 
   return (
     <div className="bg-fk-bg min-h-screen py-8">
-      <div className="max-w-md mx-auto px-4">
+      <div className="max-w-md mx-auto px-0">
         <div className="bg-white rounded shadow-fk p-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Login</h2>
 
@@ -154,7 +154,7 @@ function Login() {
                   type="button"
                   onClick={handleResetPassword}
                   disabled={loading}
-                  className="mt-2 w-full bg-fk-yellow text-white text-sm font-medium py-2 rounded hover:bg-yellow-500 disabled:opacity-50"
+                  className="mt-2 w-full bg-fk-yellow text-white text-sm font-semibold py-2 rounded hover:bg-fk-yellow-dark disabled:opacity-50"
                 >
                   Send Reset Email
                 </button>
@@ -162,8 +162,8 @@ function Login() {
             )}
 
             {showVerifyHelp && (
-              <div className="border border-blue-200 rounded p-3 bg-blue-50">
-                <p className="text-sm text-blue-800 mb-2">Your email is not verified yet.</p>
+              <div className="border border-fk-border rounded p-3 bg-fk-bg">
+                <p className="text-sm text-fk-blue mb-2">Your email is not verified yet.</p>
                 <button
                   type="button"
                   onClick={handleResendVerification}
@@ -189,3 +189,5 @@ function Login() {
 }
 
 export default Login
+
+

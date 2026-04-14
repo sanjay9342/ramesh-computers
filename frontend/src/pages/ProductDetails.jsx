@@ -1,18 +1,31 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { FaHeart, FaShoppingCart, FaStar, FaRegStar, FaMinus, FaPlus, FaCheck, FaTruck, FaShieldAlt, FaUndo } from 'react-icons/fa'
+import {
+  FaHeart,
+  FaShoppingCart,
+  FaStar,
+  FaRegStar,
+  FaMinus,
+  FaPlus,
+  FaCheck,
+  FaTruck,
+  FaShieldAlt,
+  FaUndo,
+} from 'react-icons/fa'
 import { toast } from 'react-toastify'
 import { addToCart } from '../redux/slices/cartSlice'
 import { addToWishlist, removeFromWishlist } from '../redux/slices/wishlistSlice'
 import { getProduct, getAllProducts } from '../services/productService'
 import ProductCard from '../components/ProductCard'
+import LoadingScreen from '../components/LoadingScreen'
+import { formatCurrency } from '../utils/formatters'
 
 function ProductDetails() {
   const { id } = useParams()
   const dispatch = useDispatch()
   const { items: wishlistItems } = useSelector((state) => state.wishlist)
-  
+
   const [product, setProduct] = useState(null)
   const [similarProducts, setSimilarProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -26,32 +39,28 @@ function ProductDetails() {
   const fetchProduct = async () => {
     try {
       setLoading(true)
-      // First try to get single product from Firestore
       const productData = await getProduct(id)
-      
+
       if (productData) {
         setProduct(productData)
-        // Fetch similar products
         const allProducts = await getAllProducts()
         const similar = allProducts
-          .filter(p => p.category === productData.category && p.id !== productData.id)
+          .filter((item) => item.category === productData.category && item.id !== productData.id)
+          .slice(0, 4)
+        setSimilarProducts(similar)
+        return
+      }
+
+      const allProducts = await getAllProducts()
+      const foundProduct = allProducts.find((item) => item.id === id || item.id === Number.parseInt(id, 10))
+      if (foundProduct) {
+        setProduct(foundProduct)
+        const similar = allProducts
+          .filter((item) => item.category === foundProduct.category && item.id !== foundProduct.id)
           .slice(0, 4)
         setSimilarProducts(similar)
       } else {
-        // If product not found in Firestore, try to find in local products
-        const allProducts = await getAllProducts()
-        const foundProduct = allProducts.find(p => p.id === id || p.id === parseInt(id))
-        
-        if (foundProduct) {
-          setProduct(foundProduct)
-          const similar = allProducts
-            .filter(p => p.category === foundProduct.category && p.id !== foundProduct.id)
-            .slice(0, 4)
-          setSimilarProducts(similar)
-        } else {
-          // Product not found - show error
-          setProduct(null)
-        }
+        setProduct(null)
       }
     } catch (error) {
       console.error('Error fetching product:', error)
@@ -61,28 +70,31 @@ function ProductDetails() {
     }
   }
 
-  const isInWishlist = product && wishlistItems.some(item => item.id === product.id)
-  const productImages = Array.isArray(product?.images) && product.images.length > 0
-    ? product.images
-    : (product?.image ? [product.image] : [])
+  const isInWishlist = product && wishlistItems.some((item) => item.id === product.id)
+  const productImages =
+    Array.isArray(product?.images) && product.images.length > 0
+      ? product.images
+      : product?.image
+        ? [product.image]
+        : []
+
   const selectedProductImage =
-    productImages[selectedImage] ||
-    productImages[0] ||
-    product?.image ||
-    'https://via.placeholder.com/600'
+    productImages[selectedImage] || productImages[0] || product?.image || 'https://via.placeholder.com/600'
 
   useEffect(() => {
     setSelectedImage(0)
   }, [product?.id])
 
   const handleAddToCart = () => {
-    dispatch(addToCart({
-      id: product.id,
-      title: product.title,
-      price: product.discountPrice || product.price,
-      image: selectedProductImage,
-      quantity,
-    }))
+    dispatch(
+      addToCart({
+        id: product.id,
+        title: product.title,
+        price: product.discountPrice || product.price,
+        image: selectedProductImage,
+        quantity,
+      })
+    )
     toast.success('Added to cart!')
   }
 
@@ -104,44 +116,57 @@ function ProductDetails() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fk-blue"></div>
-      </div>
-    )
+    return <LoadingScreen text="Loading product..." />
   }
 
   if (!product) {
     return (
       <div className="bg-fk-bg min-h-screen py-8">
-        <div className="max-w-7xl mx-auto px-4 text-center">
+        <div className="w-full px-0 text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Product Not Found</h2>
           <p className="text-gray-600 mb-6">The product you're looking for doesn't exist or has been removed.</p>
-          <Link to="/products" className="text-fk-blue hover:underline">Browse all products</Link>
+          <Link to="/products" className="text-fk-blue hover:underline">
+            Browse all products
+          </Link>
         </div>
       </div>
     )
   }
 
-  const discountPercentage = product.discountPrice 
+  const discountPercentage = product.discountPrice
     ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
     : 0
   const rawOffers = product.availableOffers ?? product.specs?.availableOffers
   const availableOffers = Array.isArray(rawOffers)
     ? rawOffers.map((offer) => String(offer || '').trim()).filter(Boolean)
-    : (typeof rawOffers === 'string'
-      ? rawOffers.split('\n').map((offer) => offer.trim()).filter(Boolean)
-      : [])
-  const showFreeDelivery = typeof product.freeDelivery === 'boolean'
-    ? product.freeDelivery
-    : (typeof product.specs?.freeDelivery === 'boolean' ? product.specs.freeDelivery : true)
+    : typeof rawOffers === 'string'
+      ? rawOffers
+          .split('\n')
+          .map((offer) => offer.trim())
+          .filter(Boolean)
+      : []
+  const showFreeDelivery =
+    typeof product.freeDelivery === 'boolean'
+      ? product.freeDelivery
+      : typeof product.specs?.freeDelivery === 'boolean'
+        ? product.specs.freeDelivery
+        : true
   const warrantyText = String(product.warranty || product.specs?.warranty || '').trim()
   const replacementText = String(product.replacement || product.specs?.replacement || '').trim()
+  const highlights = Array.isArray(product.highlights)
+    ? product.highlights.map((item) => String(item || '').trim()).filter(Boolean)
+    : []
+  const specEntries = Object.entries(product.specs || {}).filter(
+    ([key, value]) =>
+      key &&
+      value &&
+      !['availableOffers', 'warranty', 'replacement', 'freeDelivery'].includes(key)
+  )
   const hasSupportInfo = showFreeDelivery || Boolean(warrantyText) || Boolean(replacementText)
 
   const renderStars = (rating) => {
     const stars = []
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 5; i += 1) {
       if (i <= rating) {
         stars.push(<FaStar key={i} className="text-fk-yellow text-sm" />)
       } else {
@@ -153,26 +178,24 @@ function ProductDetails() {
 
   return (
     <div className="bg-fk-bg min-h-screen py-4">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Breadcrumb */}
+      <div className="w-full px-0">
         <div className="mb-4 text-sm">
-          <Link to="/" className="text-gray-500 hover:text-fk-blue">Home</Link>
+          <Link to="/" className="text-gray-500 hover:text-fk-blue">
+            Home
+          </Link>
           <span className="mx-2 text-gray-400">/</span>
-          <Link to={`/category/${product.category}`} className="text-gray-500 hover:text-fk-blue capitalize">{product.category}</Link>
+          <Link to={`/category/${product.category}`} className="text-gray-500 hover:text-fk-blue capitalize">
+            {product.category}
+          </Link>
           <span className="mx-2 text-gray-400">/</span>
           <span className="text-gray-700">{product.title?.substring(0, 50)}...</span>
         </div>
 
         <div className="bg-white rounded shadow-fk p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Image Gallery */}
             <div>
               <div className="border border-gray-200 rounded p-4 mb-4">
-                <img
-                  src={selectedProductImage}
-                  alt={product.title}
-                  className="w-full h-96 object-contain"
-                />
+                <img src={selectedProductImage} alt={product.title} className="w-full h-96 object-contain" />
               </div>
               {productImages.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto">
@@ -180,7 +203,9 @@ function ProductDetails() {
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`border-2 rounded p-1 flex-shrink-0 ${selectedImage === index ? 'border-fk-blue' : 'border-gray-200'}`}
+                      className={`border-2 rounded p-1 flex-shrink-0 ${
+                        selectedImage === index ? 'border-fk-blue' : 'border-gray-200'
+                      }`}
                     >
                       <img src={img} alt="" className="w-20 h-20 object-contain" />
                     </button>
@@ -189,12 +214,11 @@ function ProductDetails() {
               )}
             </div>
 
-            {/* Product Info */}
             <div>
               <p className="text-sm text-gray-500 mb-1">{product.brand}</p>
+              {product.sku ? <p className="text-xs uppercase tracking-wide text-gray-400 mb-1">SKU: {product.sku}</p> : null}
               <h1 className="text-xl font-medium text-gray-900 mb-2">{product.title}</h1>
-              
-              {/* Rating */}
+
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex">{renderStars(Math.round(product.rating || 0))}</div>
                 <span className="text-sm text-gray-500">{product.rating} ratings</span>
@@ -206,16 +230,13 @@ function ProductDetails() {
                 )}
               </div>
 
-              {/* Price */}
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-2xl font-bold text-gray-900">
-                  ₹{product.discountPrice?.toLocaleString() || product.price?.toLocaleString()}
+                  {formatCurrency(product.discountPrice || product.price)}
                 </span>
                 {product.discountPrice && (
                   <>
-                    <span className="text-lg text-gray-500 line-through">
-                      ₹{product.price?.toLocaleString()}
-                    </span>
+                    <span className="text-lg text-gray-500 line-through">{formatCurrency(product.price)}</span>
                     <span className="bg-fk-teal text-white text-xs font-bold px-2 py-1 rounded">
                       {discountPercentage}% OFF
                     </span>
@@ -223,7 +244,6 @@ function ProductDetails() {
                 )}
               </div>
 
-              {/* Available Offers */}
               <div className="mb-6">
                 <p className="font-bold text-gray-800 mb-2">Available Offers</p>
                 <ul className="space-y-1">
@@ -240,15 +260,28 @@ function ProductDetails() {
                 </ul>
               </div>
 
-              {/* Stock & Delivery */}
+              {highlights.length > 0 && (
+                <div className="mb-6">
+                  <p className="font-bold text-gray-800 mb-2">Highlights</p>
+                  <ul className="space-y-2">
+                    {highlights.map((item, index) => (
+                      <li key={`${item}-${index}`} className="flex items-start gap-2 text-sm text-gray-700">
+                        <FaCheck className="text-fk-yellow text-xs mt-1" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <div className="mb-6">
-                {(product.stock || 0) > 0 ? (
-                  <p className="text-fk-teal font-medium mb-2">✓ In Stock ({product.stock} available)</p>
+                {Number(product.stock || 0) > 0 ? (
+                  <p className="text-fk-teal font-medium mb-2">In Stock ({product.stock} available)</p>
                 ) : (
                   <p className="text-red-500 font-medium mb-2">Out of Stock</p>
                 )}
                 {hasSupportInfo ? (
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                     {showFreeDelivery && (
                       <div className="flex items-center gap-1">
                         <FaTruck />
@@ -269,14 +302,13 @@ function ProductDetails() {
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">No warranty/replacement details added.</p>
+                  <p className="text-sm text-gray-500">No warranty or replacement details added.</p>
                 )}
               </div>
 
-              {/* Quantity & Add to Cart */}
               <div className="flex items-center gap-4 mb-6">
                 <div className="flex items-center border border-gray-300 rounded">
-                  <button 
+                  <button
                     onClick={() => handleQuantityChange(-1)}
                     className="px-3 py-2 hover:bg-gray-100"
                     disabled={quantity <= 1}
@@ -284,7 +316,7 @@ function ProductDetails() {
                     <FaMinus />
                   </button>
                   <span className="px-4 py-2 border-x border-gray-300">{quantity}</span>
-                  <button 
+                  <button
                     onClick={() => handleQuantityChange(1)}
                     className="px-3 py-2 hover:bg-gray-100"
                     disabled={quantity >= (product.stock || 10)}
@@ -292,16 +324,16 @@ function ProductDetails() {
                     <FaPlus />
                   </button>
                 </div>
-                
+
                 <button
                   onClick={handleAddToCart}
                   disabled={!product.stock}
-                  className="flex-1 bg-fk-yellow hover:bg-yellow-500 text-white font-medium py-3 px-6 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-fk-blue hover:bg-fk-blue-dark text-white font-semibold py-3 px-6 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FaShoppingCart className="inline mr-2" />
                   ADD TO CART
                 </button>
-                
+
                 <button
                   onClick={handleWishlistToggle}
                   className="border border-gray-300 p-3 rounded hover:border-fk-blue transition-colors"
@@ -310,24 +342,36 @@ function ProductDetails() {
                 </button>
               </div>
 
-              {/* Description */}
               {product.description && (
                 <div className="border-t border-gray-200 pt-4">
                   <p className="font-bold text-gray-800 mb-3">Description</p>
                   <p className="text-sm text-gray-600">{product.description}</p>
                 </div>
               )}
+
+              {specEntries.length > 0 && (
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  <p className="font-bold text-gray-800 mb-3">Specifications</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {specEntries.map(([key, value]) => (
+                      <div key={key} className="rounded-lg border border-gray-200 px-3 py-2">
+                        <p className="text-xs uppercase tracking-wide text-gray-400">{key}</p>
+                        <p className="text-sm text-gray-700">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Similar Products */}
         {similarProducts.length > 0 && (
           <div className="mt-8">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Similar Products</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {similarProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
+              {similarProducts.map((item) => (
+                <ProductCard key={item.id} product={item} />
               ))}
             </div>
           </div>
@@ -338,4 +382,3 @@ function ProductDetails() {
 }
 
 export default ProductDetails
-

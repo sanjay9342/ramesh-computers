@@ -2,18 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Pagination, Autoplay } from 'swiper/modules'
-import {
-  FaLaptop,
-  FaDesktop,
-  FaVolumeUp,
-  FaPrint,
-  FaVideo,
-  FaHeadphones,
-  FaChevronRight,
-} from 'react-icons/fa'
+import { FaChevronRight } from 'react-icons/fa'
 import ProductCard from '../components/ProductCard'
 import { getAllProducts } from '../services/productService'
 import { getActiveBanners } from '../services/bannerService'
+import { useAppLoad } from '../context/AppLoadContext'
+import { STORE_INFO } from '../data/storeInfo'
 
 import 'swiper/css'
 import 'swiper/css/navigation'
@@ -24,7 +18,9 @@ function Home() {
   const [products, setProducts] = useState([])
   const [banners, setBanners] = useState([])
   const [loading, setLoading] = useState(true)
+  const [bannersReady, setBannersReady] = useState(false)
   const [activeSlide, setActiveSlide] = useState(0)
+  const { setHomeReady } = useAppLoad() || {}
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') return false
     return window.innerWidth < 640
@@ -57,24 +53,21 @@ function Home() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  const categories = [
-    { name: 'Laptops', slug: 'laptops', icon: <FaLaptop size={28} /> },
-    { name: 'Desktops', slug: 'desktops', icon: <FaDesktop size={28} /> },
-    { name: 'Speakers', slug: 'speakers', icon: <FaVolumeUp size={28} /> },
-    { name: 'Printers', slug: 'printers', icon: <FaPrint size={28} /> },
-    { name: 'CCTV', slug: 'cctv', icon: <FaVideo size={28} /> },
-    { name: 'Accessories', slug: 'accessories', icon: <FaHeadphones size={28} /> },
-  ]
-
-  const brands = ['HP', 'Dell', 'Lenovo', 'ASUS', 'Acer', 'MSI', 'Apple', 'Samsung', 'LG', 'Canon']
+  const brands = ['HP', 'Dell', 'Lenovo', 'ASUS', 'Acer', 'MSI', 'Apple', 'Samsung', 'LG', 'Canon', 'Luminous', 'V-Guard']
   const homeProductLimit = isMobile ? 4 : 8
   const homeSkeletonCount = isMobile ? 4 : 8
-
-  const featuredProducts = products.filter((product) => product.isFeatured).slice(0, homeProductLimit)
-  const laptops = products.filter((product) => product.category === 'laptops').slice(0, homeProductLimit)
+  const topDealsLimit = 15
+  const newArrivalsLimit = 15
+  const bestSellingLimit = 8
+  const laptopRowCardClass =
+    'w-[calc(50%-0.5rem)] sm:w-[calc(50%-0.75rem)] md:w-[calc((100%-2rem)/3)] lg:w-[calc((100%-4rem)/5)] flex-shrink-0'
+  const featuredProducts = products
+    .filter((product) => product.isFeatured && Number(product.stock || 0) > 0)
+    .slice(0, topDealsLimit)
+  const laptops = products.filter((product) => product.category === 'laptops').slice(0, bestSellingLimit)
   const newArrivals = [...products]
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-    .slice(0, homeProductLimit)
+    .slice(0, newArrivalsLimit)
 
   const defaultBanners = useMemo(
     () => [
@@ -105,12 +98,49 @@ function Home() {
 
   const displayBanners = banners.length > 0 ? banners : defaultBanners
 
+  useEffect(() => {
+    let active = true
+
+    const preloadBanners = async () => {
+      const sources = displayBanners.map((banner) => banner.image).filter(Boolean)
+      if (sources.length === 0) {
+        if (active) setBannersReady(true)
+        return
+      }
+      setBannersReady(false)
+      await Promise.all(
+        sources.map(
+          (src) =>
+            new Promise((resolve) => {
+              const img = new Image()
+              img.onload = resolve
+              img.onerror = resolve
+              img.src = src
+            })
+        )
+      )
+      if (active) setBannersReady(true)
+    }
+
+    preloadBanners()
+    return () => {
+      active = false
+    }
+  }, [displayBanners])
+
+  useEffect(() => {
+    if (!setHomeReady) return
+    if (!loading && bannersReady) {
+      setHomeReady(true)
+    }
+  }, [bannersReady, loading, setHomeReady])
+
   return (
-    <div className="bg-white min-h-screen">
-      <div className="bg-white overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          {loading ? (
-            <div className="h-72 md:h-96 bg-slate-600/40 rounded-2xl animate-pulse" />
+    <div className="bg-fk-bg min-h-screen">
+      <div className="bg-fk-bg overflow-hidden">
+        <div className="w-full px-0 py-8">
+          {loading || !bannersReady ? (
+            <div className="h-72 md:h-96 rounded-2xl banner-skeleton" />
           ) : (
             <div className="relative">
               <Swiper
@@ -131,7 +161,7 @@ function Home() {
                 {displayBanners.map((banner) => (
                   <SwiperSlide key={banner.id}>
                     <Link to={banner.link || '/products'} className="block">
-                      <div className="h-40 md:h-48 lg:h-52 bg-transparent rounded-3xl shadow-none overflow-hidden">
+                      <div className="h-64 sm:h-56 md:h-48 lg:h-52 bg-transparent rounded-3xl shadow-none overflow-hidden">
                         <img src={banner.image} alt={banner.title} className="w-full h-full object-cover" />
                       </div>
                     </Link>
@@ -147,31 +177,10 @@ function Home() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 mt-6 md:mt-10 relative z-10">
-        <div className="bg-white rounded-2xl shadow-lg p-4 md:p-5">
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 md:gap-4">
-            {categories.map((category) => (
-              <Link
-                key={category.slug}
-                to={`/category/${category.slug}`}
-                className="group flex flex-col items-center gap-2 py-2"
-              >
-                <div className="w-14 h-14 rounded-2xl bg-slate-100 text-fk-blue flex items-center justify-center group-hover:bg-fk-blue group-hover:text-white transition-colors">
-                  {category.icon}
-                </div>
-                <span className="text-xs md:text-sm font-semibold text-slate-700 group-hover:text-fk-blue">
-                  {category.name}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="px-4 py-6">
-        <div className="max-w-7xl mx-auto bg-gradient-to-r from-[#e3f2ff] via-[#f1e6ff] to-[#ffe9f5] rounded-3xl shadow-sm p-5">
+      <div className="px-0 py-6">
+        <div className="w-full bg-gradient-to-r from-[#9fd8ff] via-[#d7a9ff] to-[#ff9bc5] border border-fk-border rounded-3xl shadow-fk p-3 sm:p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Top Deals</h2>
+            <h2 className="text-xl font-bold text-[#24161f]">Top Deals</h2>
             <Link to="/products" className="text-fk-blue text-sm font-medium flex items-center gap-1 hover:underline">
               View All <FaChevronRight />
             </Link>
@@ -179,8 +188,8 @@ function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {loading ? (
               [...Array(homeSkeletonCount)].map((_, index) => (
-                <div key={index} className="bg-white rounded h-72 animate-pulse">
-                  <div className="h-56 bg-gray-200 m-4 rounded" />
+                <div key={index} className="bg-white rounded h-64 animate-pulse">
+                  <div className="h-48 bg-gray-200 m-4 rounded" />
                   <div className="h-4 bg-gray-200 mx-4 mb-2 rounded" />
                   <div className="h-4 bg-gray-200 mx-4 w-2/3 rounded" />
                 </div>
@@ -194,9 +203,9 @@ function Home() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-2">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Best Selling Laptops</h2>
+      <div className="w-full px-0 py-2">
+        <div className="flex items-center justify-between mb-4 pl-3 sm:pl-4 lg:pl-6">
+          <h2 className="text-xl font-bold text-[#24161f]">Best Selling Laptops</h2>
           <Link
             to="/category/laptops"
             className="text-fk-blue text-sm font-medium flex items-center gap-1 hover:underline"
@@ -204,27 +213,31 @@ function Home() {
             View All <FaChevronRight />
           </Link>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="flex gap-4 overflow-x-auto pb-2 pr-1">
           {loading ? (
-            [...Array(homeSkeletonCount)].map((_, index) => (
-              <div key={index} className="bg-white rounded h-72 animate-pulse">
-                <div className="h-56 bg-gray-200 m-4 rounded" />
+            [...Array(bestSellingLimit)].map((_, index) => (
+              <div key={index} className={`${laptopRowCardClass} bg-white rounded h-64 animate-pulse`}>
+                <div className="h-48 bg-gray-200 m-4 rounded" />
                 <div className="h-4 bg-gray-200 mx-4 mb-2 rounded" />
                 <div className="h-4 bg-gray-200 mx-4 w-2/3 rounded" />
               </div>
             ))
           ) : laptops.length > 0 ? (
-            laptops.map((product) => <ProductCard key={product.id} product={product} />)
+            laptops.map((product) => (
+              <div key={product.id} className={laptopRowCardClass}>
+                <ProductCard product={product} />
+              </div>
+            ))
           ) : (
-            <div className="col-span-full text-center py-8 text-gray-500">No laptop products found.</div>
+            <div className="min-w-full text-center py-8 text-gray-500">No laptop products found.</div>
           )}
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="bg-gradient-to-r from-[#edf7ff] to-[#fff4e8] rounded-3xl shadow-sm p-5">
+      <div className="w-full px-0 py-6">
+        <div className="bg-gradient-to-l from-[#d6ebff] via-[#ffe1c8] to-[#ffd9e6] border border-fk-border rounded-3xl shadow-fk p-4 sm:p-6 md:p-7 lg:p-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">New Arrivals</h2>
+            <h2 className="text-xl font-bold text-[#24161f]">New Arrivals</h2>
             <Link to="/products" className="text-fk-blue text-sm font-medium flex items-center gap-1 hover:underline">
               View All <FaChevronRight />
             </Link>
@@ -232,8 +245,8 @@ function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {loading ? (
               [...Array(homeSkeletonCount)].map((_, index) => (
-                <div key={index} className="bg-white rounded h-72 animate-pulse">
-                  <div className="h-56 bg-gray-200 m-4 rounded" />
+                <div key={index} className="bg-white rounded h-64 animate-pulse">
+                  <div className="h-48 bg-gray-200 m-4 rounded" />
                   <div className="h-4 bg-gray-200 mx-4 mb-2 rounded" />
                   <div className="h-4 bg-gray-200 mx-4 w-2/3 rounded" />
                 </div>
@@ -247,18 +260,18 @@ function Home() {
         </div>
       </div>
 
-      <div className="bg-white py-6 mt-4">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Top Brands</h2>
-          <div className="relative overflow-hidden rounded-xl border border-gray-100">
-            <div className="brand-marquee flex gap-4 py-3 px-2">
+      <div className="bg-white py-6 mt-4 border-y border-fk-border">
+        <div className="w-full px-0">
+          <h2 className="text-xl font-bold text-[#24161f] mb-4 px-0">Top Brands</h2>
+          <div className="relative overflow-hidden rounded-xl border border-fk-border bg-gradient-to-r from-white via-[#fff7fa] to-[#fff4eb]">
+            <div className="brand-marquee flex gap-4 py-3 px-0">
               {[...brands, ...brands].map((brand, index) => (
                 <Link
                   key={`${brand}-${index}`}
                   to={`/products?brand=${brand}`}
-                  className="flex items-center justify-center min-w-[120px] h-14 bg-white border border-gray-200 rounded-lg shadow-sm hover:border-fk-blue hover:shadow-md transition-all"
+                  className="flex items-center justify-center min-w-[120px] h-14 bg-white border border-fk-border rounded-lg shadow-sm hover:border-fk-blue hover:shadow-fk transition-all"
                 >
-                  <span className="font-bold text-gray-700">{brand}</span>
+                  <span className="font-bold text-[#5a3b47]">{brand}</span>
                 </Link>
               ))}
             </div>
@@ -266,11 +279,26 @@ function Home() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Ramesh Computers</h2>
-          <p className="text-gray-600 mb-4">Best Deals on Laptops, Desktops and Accessories</p>
-          <p className="text-sm text-gray-500">Sales and Service | Wholesale and Retail | Tamil Nadu</p>
+      <div className="w-full px-0 py-8">
+        <div className="bg-white border border-fk-border rounded-2xl shadow-fk px-4 py-8 text-center">
+          <img
+            src={STORE_INFO.logo}
+            alt={STORE_INFO.name}
+            className="h-24 sm:h-28 w-auto max-w-full mx-auto object-contain mb-4"
+          />
+          <h2 className="text-2xl font-bold text-[#24161f] mb-2">{STORE_INFO.heroTitle}</h2>
+          <p className="text-[#6f5a66] mb-4">{STORE_INFO.heroText}</p>
+          <div className="flex flex-wrap justify-center gap-2 mb-4">
+            {STORE_INFO.services.map((service) => (
+              <span
+                key={service}
+                className="rounded-full border border-fk-border bg-fk-bg px-3 py-1 text-xs font-semibold text-[#6f5a66]"
+              >
+                {service}
+              </span>
+            ))}
+          </div>
+          <p className="text-sm text-[#8d6476]">Sales and Service | Wholesale and Retail | {STORE_INFO.location}</p>
         </div>
       </div>
     </div>

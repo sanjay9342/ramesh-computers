@@ -1,7 +1,7 @@
 {
   "name": "ramesh-computers-backend",
   "version": "1.0.0",
-  "description": "Backend API for Ramesh Computers eCommerce",
+  "description": "Backend API for Need 4 IT eCommerce",
   "main": "src/server.js",
   "type": "module",
   "scripts": {

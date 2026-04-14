@@ -1,25 +1,56 @@
 import express from 'express'
 import { firestore } from '../lib/firebaseAdmin.js'
+import { requireAdmin } from '../middleware/auth.js'
 
 const router = express.Router()
 const productsCollection = firestore.collection('products')
 
+const parseLineList = (value) => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || '').trim()).filter(Boolean)
+  }
+  if (typeof value === 'string') {
+    return value
+      .split('\n')
+      .map((item) => item.trim())
+      .filter(Boolean)
+  }
+  return []
+}
+
+const parseSpecs = (value) => {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return Object.fromEntries(
+      Object.entries(value)
+        .map(([key, itemValue]) => [String(key || '').trim(), String(itemValue || '').trim()])
+        .filter(([key, itemValue]) => key && itemValue)
+    )
+  }
+
+  if (typeof value === 'string') {
+    return Object.fromEntries(
+      value
+        .split('\n')
+        .map((line) => line.split(':'))
+        .filter((parts) => parts.length >= 2)
+        .map(([key, ...rest]) => [String(key || '').trim(), rest.join(':').trim()])
+        .filter(([key, itemValue]) => key && itemValue)
+    )
+  }
+
+  return {}
+}
+
 const normalizeProductInput = (input = {}) => {
   const image = input.image || input.images?.[0] || ''
-  const availableOffers = Array.isArray(input.availableOffers)
-    ? input.availableOffers
-      .map((offer) => String(offer || '').trim())
-      .filter(Boolean)
-    : (typeof input.availableOffers === 'string'
-      ? input.availableOffers
-        .split('\n')
-        .map((offer) => offer.trim())
-        .filter(Boolean)
-      : [])
+  const availableOffers = parseLineList(input.availableOffers)
+  const highlights = parseLineList(input.highlights)
+  const specs = parseSpecs(input.specs)
 
   return {
     title: String(input.title || '').trim(),
     slug: String(input.slug || '').trim(),
+    sku: String(input.sku || '').trim().toUpperCase(),
     category: String(input.category || '').trim().toLowerCase(),
     brand: String(input.brand || '').trim(),
     price: Number(input.price || 0),
@@ -28,9 +59,10 @@ const normalizeProductInput = (input = {}) => {
     images: Array.isArray(input.images) && input.images.length > 0 ? input.images : (image ? [image] : []),
     image,
     availableOffers,
+    highlights,
     warranty: String(input.warranty || '').trim(),
     replacement: String(input.replacement || '').trim(),
-    specs: input.specs || {},
+    specs,
     stock: Number(input.stock || 0),
     rating: Number(input.rating || 0),
     reviewCount: Number(input.reviewCount || 0),
@@ -130,7 +162,7 @@ router.get('/:id', async (req, res, next) => {
 })
 
 // Create product
-router.post('/', async (req, res, next) => {
+router.post('/', requireAdmin, async (req, res, next) => {
   try {
     const payload = normalizeProductInput(req.body)
 
@@ -153,7 +185,7 @@ router.post('/', async (req, res, next) => {
 })
 
 // Update product
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', requireAdmin, async (req, res, next) => {
   try {
     const docRef = productsCollection.doc(req.params.id)
     const existing = await docRef.get()
@@ -175,7 +207,7 @@ router.put('/:id', async (req, res, next) => {
 })
 
 // Delete product
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', requireAdmin, async (req, res, next) => {
   try {
     const docRef = productsCollection.doc(req.params.id)
     const existing = await docRef.get()

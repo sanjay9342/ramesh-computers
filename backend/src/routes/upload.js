@@ -1,6 +1,7 @@
 import express from 'express'
 import multer from 'multer'
 import { cloudinary } from '../lib/cloudinary.js'
+import { requireAdmin } from '../middleware/auth.js'
 
 const router = express.Router()
 
@@ -32,7 +33,7 @@ const uploadToCloudinary = (file, folder = 'products') =>
   })
 
 // Upload endpoint to Cloudinary
-router.post('/', upload.single('image'), async (req, res, next) => {
+router.post('/', requireAdmin, upload.single('image'), async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' })
@@ -51,7 +52,7 @@ router.post('/', upload.single('image'), async (req, res, next) => {
 })
 
 // Multiple file upload
-router.post('/multiple', upload.array('images', 5), async (req, res, next) => {
+router.post('/multiple', requireAdmin, upload.array('images', 5), async (req, res, next) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' })

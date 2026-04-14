@@ -1,124 +1,117 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { FaFacebook, FaInstagram, FaTwitter, FaYoutube, FaWhatsapp, FaMapMarkerAlt, FaPhone, FaEnvelope } from 'react-icons/fa'
+import { FaFacebook, FaInstagram, FaTwitter, FaYoutube, FaMapMarkerAlt, FaPhone, FaEnvelope } from 'react-icons/fa'
+import { CONTACT_NUMBERS, QUICK_LINK_CATEGORIES, STORE_INFO } from '../data/storeInfo'
 
 function Footer() {
+  const quickLinks = QUICK_LINK_CATEGORIES
+
   return (
-    <footer className="bg-gray-800 text-gray-300">
-      {/* Main Footer */}
-      <div className="max-w-7xl mx-auto px-4 py-12">
+    <footer className="w-full px-0 bg-gradient-to-br from-[#24131d] via-[#341827] to-[#150e14] text-gray-300">
+      <div className="w-full px-0 py-12 pl-3 sm:pl-4 lg:pl-8 border-t border-fk-blue/25">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* About */}
           <div>
-            <h3 className="text-white font-bold text-lg mb-4">About Ramesh Computers</h3>
-            <p className="text-sm mb-4">
-              Your trusted destination for laptops, desktops, and accessories. 
-              Sales & Service | Wholesale & Retail
-            </p>
+            <img
+              src={STORE_INFO.logo}
+              alt={STORE_INFO.name}
+              className="h-16 w-auto max-w-[220px] object-contain mb-4"
+            />
+            <p className="text-sm mb-4 text-gray-300">{STORE_INFO.summary}</p>
             <div className="flex gap-4">
               <a href="#" className="text-gray-400 hover:text-fk-blue transition-colors">
                 <FaFacebook size={20} />
               </a>
-              <a href="#" className="text-gray-400 hover:text-pink-500 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-fk-teal transition-colors">
                 <FaInstagram size={20} />
               </a>
-              <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-fk-blue transition-colors">
                 <FaTwitter size={20} />
               </a>
-              <a href="#" className="text-gray-400 hover:text-red-500 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-fk-blue transition-colors">
                 <FaYoutube size={20} />
               </a>
             </div>
           </div>
 
-          {/* Quick Links */}
           <div>
             <h3 className="text-white font-bold text-lg mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/products" className="text-sm hover:text-white transition-colors">
+                <Link to="/products" className="text-sm hover:text-fk-blue transition-colors">
                   All Products
                 </Link>
               </li>
-              <li>
-                <Link to="/category/laptops" className="text-sm hover:text-white transition-colors">
-                  Laptops
-                </Link>
-              </li>
-              <li>
-                <Link to="/category/desktops" className="text-sm hover:text-white transition-colors">
-                  Desktops
-                </Link>
-              </li>
-              <li>
-                <Link to="/category/accessories" className="text-sm hover:text-white transition-colors">
-                  Accessories
-                </Link>
-              </li>
+              {quickLinks.map((category) => (
+                <li key={category.slug}>
+                  <Link to={`/category/${category.slug}`} className="text-sm hover:text-fk-blue transition-colors">
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Customer Service */}
           <div>
             <h3 className="text-white font-bold text-lg mb-4">Customer Service</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/shipping-policy" className="text-sm hover:text-white transition-colors">
+                <Link to="/policies?section=shipping" className="text-sm hover:text-fk-blue transition-colors">
                   Shipping Policy
                 </Link>
               </li>
               <li>
-                <Link to="/return-policy" className="text-sm hover:text-white transition-colors">
+                <Link to="/policies?section=returns" className="text-sm hover:text-fk-blue transition-colors">
                   Return Policy
                 </Link>
               </li>
               <li>
-                <Link to="/privacy-policy" className="text-sm hover:text-white transition-colors">
+                <Link to="/policies?section=privacy" className="text-sm hover:text-fk-blue transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-sm hover:text-white transition-colors">
+                <Link to="/contact" className="text-sm hover:text-fk-blue transition-colors">
                   Contact Us
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Contact Info */}
           <div>
             <h3 className="text-white font-bold text-lg mb-4">Contact Us</h3>
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
-                <FaMapMarkerAlt className="mt-1 text-fk-yellow" />
+                <FaMapMarkerAlt className="mt-1 text-fk-teal" />
                 <span className="text-sm">
-                  Ramesh Computers<br />
-                  Tamil Nadu, India
+                  {STORE_INFO.name}
+                  <br />
+                  {STORE_INFO.address}
                 </span>
               </li>
+              {CONTACT_NUMBERS.map((phone) => (
+                <li key={phone.digits} className="flex items-center gap-2">
+                  <FaPhone className="text-fk-teal" />
+                  <a href={`tel:${phone.tel}`} className="text-sm hover:text-white transition-colors">
+                    {phone.display}
+                  </a>
+                </li>
+              ))}
               <li className="flex items-center gap-2">
-                <FaPhone className="text-fk-yellow" />
-                <span className="text-sm">+91 98765 43210</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <FaWhatsapp className="text-fk-yellow" />
-                <span className="text-sm">+91 98765 43210</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <FaEnvelope className="text-fk-yellow" />
-                <span className="text-sm">info@rameshcomputers.com</span>
+                <FaEnvelope className="text-fk-teal" />
+                <a href={`mailto:${STORE_INFO.email}`} className="text-sm hover:text-white transition-colors">
+                  {STORE_INFO.email}
+                </a>
               </li>
             </ul>
           </div>
         </div>
       </div>
 
-      {/* Bottom Bar */}
-      <div className="border-t border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="border-t border-white/10">
+        <div className="w-full px-0 py-4 pl-3 sm:pl-4 lg:pl-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-2">
             <p className="text-sm text-gray-400">
-              © {new Date().getFullYear()} Ramesh Computers. All rights reserved.
+              Copyright {new Date().getFullYear()} {STORE_INFO.name}. All rights reserved.
             </p>
             <div className="flex gap-4">
               <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/visa/visa-original.svg" alt="Visa" className="h-8" />

@@ -31,7 +31,7 @@ function Wishlist() {
   if (items.length === 0) {
     return (
       <div className="bg-fk-bg min-h-screen py-8">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="w-full px-0">
           <div className="bg-white rounded shadow-fk p-8 text-center">
             <FaRegHeart className="text-6xl text-gray-300 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Your wishlist is empty</h2>
@@ -50,7 +50,7 @@ function Wishlist() {
 
   return (
     <div className="bg-fk-bg min-h-screen py-4">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="w-full px-0">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">My Wishlist ({items.length} items)</h1>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -64,14 +64,14 @@ function Wishlist() {
               </button>
               
               <Link to={`/product/${product.id}`}>
-                <div className="product-image-container p-4">
+                <div className="product-image-container p-3">
                   <img
                     src={product.images?.[0] || product.image || 'https://via.placeholder.com/300'}
                     alt={product.title}
-                    className="w-full h-40 object-contain"
+                    className="w-full h-36 object-contain"
                   />
                 </div>
-                <div className="p-4 pt-0">
+                <div className="p-3 pt-0">
                   <p className="text-xs text-gray-500 mb-1">{product.brand}</p>
                   <h3 className="text-sm font-medium text-gray-800 line-clamp-2 mb-2">
                     {product.title}
@@ -89,10 +89,10 @@ function Wishlist() {
                 </div>
               </Link>
               
-              <div className="p-4 pt-0">
+              <div className="p-3 pt-0">
                 <button
                   onClick={() => handleMoveToCart(product)}
-                  className="w-full bg-fk-yellow hover:bg-yellow-500 text-white font-medium py-2 rounded transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-fk-yellow hover:bg-fk-yellow-dark text-white font-semibold py-2 rounded transition-colors flex items-center justify-center gap-2"
                 >
                   <FaShoppingCart />
                   Move to Cart
@@ -107,3 +107,6 @@ function Wishlist() {
 }
 
 export default Wishlist
+
+
+

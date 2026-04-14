@@ -1,19 +1,23 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import {
   FaBars,
   FaBell,
   FaBox,
-  FaLaptop,
+  FaTags,
   FaShoppingCart,
   FaSignOutAlt,
   FaTachometerAlt,
   FaTimes,
+  FaUsers,
 } from 'react-icons/fa'
+import { AnimatePresence } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { logoutUser } from '../../redux/slices/userSlice'
 import { api } from '../../utils/api'
+import PageTransition from '../PageTransition'
+import { STORE_INFO } from '../../data/storeInfo'
 
 const SEEN_CONFIRMED_ORDERS_KEY = 'admin_seen_confirmed_order_ids'
 
@@ -37,6 +41,7 @@ function AdminLayout() {
   const [seenOrderIds, setSeenOrderIds] = useState(getSeenOrderIds)
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const location = useLocation()
   const notificationsRef = useRef(null)
   const hasLoadedNotificationsRef = useRef(false)
   const seenOrderIdsRef = useRef(seenOrderIds)
@@ -45,6 +50,8 @@ function AdminLayout() {
     { path: '/admin', icon: <FaTachometerAlt />, label: 'Dashboard' },
     { path: '/admin/products', icon: <FaBox />, label: 'Catalog + Slider' },
     { path: '/admin/orders', icon: <FaShoppingCart />, label: 'Orders' },
+    { path: '/admin/coupons', icon: <FaTags />, label: 'Coupons' },
+    { path: '/admin/customers', icon: <FaUsers />, label: 'Customers' },
   ]
 
   const unseenConfirmedOrders = useMemo(
@@ -119,16 +126,21 @@ function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="bg-fk-blue text-white h-16 flex items-center justify-between px-4 fixed w-full top-0 z-50">
+    <div className="min-h-screen bg-[#fff8fa]">
+      <div className="bg-gradient-to-r from-fk-blue via-fk-yellow to-fk-blue-dark text-white h-16 flex items-center justify-between px-4 fixed w-full top-0 z-50 shadow-fk">
         <div className="flex items-center gap-4">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-white hover:text-fk-yellow">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-white hover:text-fk-teal transition-colors">
             {sidebarOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
           </button>
-          <Link to="/" className="flex items-center gap-2">
-            <FaLaptop size={24} />
-            <span className="font-bold text-lg">Ramesh Computers</span>
-            <span className="bg-fk-yellow text-xs px-2 py-1 rounded">Admin</span>
+          <Link to="/" className="flex items-center gap-3 ml-2">
+            <img
+              src={STORE_INFO.logo}
+              alt={STORE_INFO.name}
+              className="h-12 w-auto max-w-[190px] object-contain"
+            />
+            <span className="bg-white/15 text-white text-xs font-semibold px-2 py-1 rounded border border-white/20">
+              Admin
+            </span>
           </Link>
         </div>
 
@@ -136,20 +148,20 @@ function AdminLayout() {
           <div className="relative" ref={notificationsRef}>
             <button
               onClick={() => setNotificationsOpen((prev) => !prev)}
-              className="relative text-white hover:text-fk-yellow"
+              className="relative text-white hover:text-fk-teal transition-colors"
               title="Confirmed order notifications"
             >
               <FaBell size={18} />
               {unseenConfirmedOrders.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-fk-yellow text-fk-blue text-[10px] font-bold rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 bg-white text-fk-blue text-[10px] font-bold rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center">
                   {unseenConfirmedOrders.length}
                 </span>
               )}
             </button>
 
             {notificationsOpen && (
-              <div className="absolute right-0 mt-3 w-80 bg-white text-gray-800 rounded-lg shadow-lg overflow-hidden">
-                <div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
+              <div className="absolute right-0 mt-3 w-80 bg-white text-gray-800 rounded-lg shadow-fk overflow-hidden border border-fk-border">
+                <div className="px-4 py-3 border-b border-fk-border bg-fk-bg flex items-center justify-between">
                   <p className="font-semibold">New Confirmed Orders</p>
                   <button
                     onClick={markAllNotificationsAsRead}
@@ -166,7 +178,7 @@ function AdminLayout() {
                       <button
                         key={order.id}
                         onClick={openOrdersFromNotification}
-                        className="w-full text-left px-4 py-3 border-b hover:bg-gray-50"
+                        className="w-full text-left px-4 py-3 border-b border-fk-border hover:bg-fk-bg"
                       >
                         <p className="text-sm font-medium">Order {order.id}</p>
                         <p className="text-xs text-gray-600">{order.shippingAddress?.name || 'Customer'}</p>
@@ -181,7 +193,7 @@ function AdminLayout() {
             )}
           </div>
 
-          <button onClick={handleLogout} className="flex items-center gap-2 hover:text-fk-yellow">
+          <button onClick={handleLogout} className="flex items-center gap-2 hover:text-fk-teal transition-colors">
             <FaSignOutAlt />
             <span className="hidden md:inline">Logout</span>
           </button>
@@ -189,27 +201,41 @@ function AdminLayout() {
       </div>
 
       <div
-        className={`fixed left-0 top-16 h-screen bg-white shadow-lg transition-all duration-300 z-40 ${
+        className={`fixed left-0 top-16 h-screen bg-white border-r border-fk-border shadow-fk transition-all duration-300 z-40 ${
           sidebarOpen ? 'w-64' : 'w-0 -translate-x-full'
         }`}
       >
         <nav className="py-4">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-fk-blue hover:text-white transition-colors"
-            >
-              {item.icon}
-              <span>{item.label}</span>
-            </Link>
-          ))}
+          {menuItems.map((item) => {
+            const isActive = item.path === '/admin'
+              ? location.pathname === '/admin'
+              : location.pathname.startsWith(item.path)
+
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-4 py-3 transition-colors ${
+                  isActive
+                    ? 'bg-fk-bg text-fk-blue border-r-4 border-fk-blue font-semibold'
+                    : 'text-gray-700 hover:bg-fk-bg hover:text-fk-blue'
+                }`}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
         </nav>
       </div>
 
       <div className={`pt-16 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
         <div className="p-6">
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <PageTransition routeKey={`${location.pathname}${location.search}`}>
+              <Outlet />
+            </PageTransition>
+          </AnimatePresence>
         </div>
       </div>
     </div>

@@ -2,9 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --brand-plum: #b326b6;
+  --brand-plum-dark: #851d88;
+  --brand-berry: #e17adf;
+  --brand-orange: #cb47ca;
+  --brand-orange-dark: #a72ea8;
+  --brand-gold: #f3a6ef;
+  --brand-ink: #2a1830;
+  --brand-muted: #6f5a74;
+  --brand-bg: #fff7fd;
+  --brand-rose: #fdefff;
+  --brand-peach: #fff3fd;
+  --brand-border: #efd8ef;
+}
+
 @layer base {
   body {
-    @apply font-roboto bg-white text-gray-900 overflow-x-hidden;
+    @apply font-roboto overflow-x-hidden m-0;
+    background-color: var(--brand-bg);
+    color: var(--brand-ink);
   }
   
   * {
@@ -38,7 +55,7 @@
   }
   
   .fk-badge-green {
-    @apply bg-green-100 text-green-800;
+    @apply bg-fk-yellow text-white;
   }
   
   .fk-badge-red {
@@ -64,16 +81,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f3f6;
+  background: var(--brand-rose);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c4c4c4;
+  background: #d893d8;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a0a0a0;
+  background: #b85cb6;
 }
 
 
@@ -91,7 +108,7 @@
 /* Swiper custom styles */
 .swiper-button-next,
 .swiper-button-prev {
-  color: #2874f0 !important;
+  color: var(--brand-plum) !important;
   background: transparent !important;
   width: 24px !important;
   height: 24px !important;
@@ -121,6 +138,21 @@
   animation: fadeIn 0.3s ease-out;
 }
 
+@keyframes shimmerSweep {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.banner-skeleton {
+  background: linear-gradient(110deg, var(--brand-rose) 0%, var(--brand-peach) 45%, var(--brand-rose) 90%);
+  background-size: 200% 100%;
+  animation: shimmerSweep 1.6s ease-in-out infinite;
+}
+
 @keyframes marqueeSlide {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -129,6 +161,239 @@
 .brand-marquee {
   animation: marqueeSlide 18s linear infinite;
   width: max-content;
+}
+
+/* Order confirmed animations */
+@keyframes orderStatusShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes orderConfirmPop {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes orderConfirmRing {
+  0% {
+    box-shadow: 0 0 0 0 rgba(216, 110, 20, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 20px rgba(216, 110, 20, 0);
+  }
+}
+
+@keyframes orderConfirmCheck {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-10deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.05) rotate(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes orderConfirmBurst {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
+@keyframes orderConfirmSheen {
+  0% {
+    opacity: 0;
+    transform: translateX(-120%);
+  }
+  25% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(120%);
+  }
+}
+
+@keyframes orderStepPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(139, 20, 81, 0.35);
+  }
+  70% {
+    transform: scale(1.07);
+    box-shadow: 0 0 0 10px rgba(139, 20, 81, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(139, 20, 81, 0);
+  }
+}
+
+.order-status-confirmed {
+  background: linear-gradient(110deg, var(--brand-plum) 0%, var(--brand-berry) 35%, var(--brand-orange) 70%);
+  background-size: 200% 100%;
+  animation: orderStatusShimmer 2.2s ease-in-out infinite;
+}
+
+.order-confirmation-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid var(--brand-border);
+  background: linear-gradient(135deg, var(--brand-rose) 0%, #fffdfa 100%);
+  box-shadow: 0 16px 28px rgba(94, 13, 54, 0.12);
+  overflow: hidden;
+  animation: orderConfirmPop 0.6s ease-out both;
+}
+
+.order-confirmation-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, var(--brand-orange) 0%, var(--brand-gold) 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  animation: orderConfirmRing 1.4s ease-out;
+}
+
+.order-confirmation-check {
+  font-size: 28px;
+  animation: orderConfirmCheck 0.6s ease-out both;
+}
+
+.order-confirmation-burst {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--brand-plum);
+  opacity: 0;
+  animation: orderConfirmBurst 1.2s ease-out;
+}
+
+.order-confirmation-burst.b1 { top: -6px; left: 50%; margin-left: -4px; animation-delay: 0.1s; }
+.order-confirmation-burst.b2 { top: 10px; right: -6px; animation-delay: 0.18s; }
+.order-confirmation-burst.b3 { bottom: -6px; right: 16px; animation-delay: 0.24s; }
+.order-confirmation-burst.b4 { bottom: -4px; left: 18px; animation-delay: 0.3s; }
+.order-confirmation-burst.b5 { top: 10px; left: -6px; animation-delay: 0.36s; }
+.order-confirmation-burst.b6 { top: -6px; right: 18px; animation-delay: 0.42s; }
+
+.order-confirmation-sheen {
+  position: absolute;
+  top: -30%;
+  left: 0;
+  width: 40%;
+  height: 160%;
+  background: linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.6) 50%, transparent 100%);
+  transform: translateX(-120%);
+  animation: orderConfirmSheen 1.6s ease-out;
+}
+
+.order-step-confirmed {
+  animation: orderStepPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes orderCancelPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.order-status-cancelled {
+  animation: orderCancelPulse 1.4s ease-in-out 2;
+}
+
+@keyframes orderCancelFlash {
+  0% { background-color: #ffffff; }
+  35% { background-color: #fff1f1; }
+  100% { background-color: #ffffff; }
+}
+
+.order-cancelled-flash {
+  animation: orderCancelFlash 0.8s ease;
+}
+
+@keyframes orderCancelSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.order-cancel-confirm {
+  animation: orderCancelSlide 0.25s ease-out;
+}
+
+@keyframes orderProgressGlow {
+  0%, 100% { box-shadow: 0 0 0 rgba(216, 110, 20, 0); }
+  50% { box-shadow: 0 0 10px rgba(216, 110, 20, 0.45); }
+}
+
+.order-progress-bar {
+  transition: width 0.5s ease;
+  animation: orderProgressGlow 1.8s ease-in-out infinite;
+}
+
+.order-steps-track {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.order-steps-line {
+  position: absolute;
+  top: 26px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 9999px;
+  background: #e5e7eb;
+}
+
+.order-steps-progress {
+  position: absolute;
+  top: 26px;
+  left: 0;
+  height: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--brand-orange) 0%, var(--brand-gold) 100%);
 }
 
 /* Product image hover zoom */
@@ -142,4 +407,29 @@
 
 .product-image-container:hover img {
   transform: scale(1.05);
+}
+
+/* Product card fluid text sizing */
+.product-text-brand {
+  font-size: clamp(0.7rem, 1.8vw, 0.85rem);
+}
+
+.product-text-title {
+  font-size: clamp(0.85rem, 2.2vw, 1rem);
+}
+
+.product-text-meta {
+  font-size: clamp(0.7rem, 1.8vw, 0.85rem);
+}
+
+.product-text-price {
+  font-size: clamp(0.9rem, 2.6vw, 1.1rem);
+}
+
+.product-text-price-old {
+  font-size: clamp(0.7rem, 2vw, 0.9rem);
+}
+
+.product-text-cta {
+  font-size: clamp(0.75rem, 2.2vw, 0.95rem);
 }

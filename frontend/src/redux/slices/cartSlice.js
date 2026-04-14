@@ -4,6 +4,7 @@ const initialState = {
   items: [],
   totalQuantity: 0,
   totalAmount: 0,
+  coupon: null,
 }
 
 const cartSlice = createSlice({
@@ -52,18 +53,15 @@ const cartSlice = createSlice({
       state.items = []
       state.totalQuantity = 0
       state.totalAmount = 0
+      state.coupon = null
     },
     
     applyCoupon: (state, action) => {
-      // Coupon logic can be added here
-      const { code, discount } = action.payload
-      state.couponCode = code
-      state.discount = discount
+      state.coupon = action.payload || null
     },
     
     removeCoupon: (state) => {
-      state.couponCode = null
-      state.discount = 0
+      state.coupon = null
     }
   },
 })

@@ -3,7 +3,12 @@ import { api } from '../../utils/api'
 
 const withErrorToast = (message, error) => {
   console.error(message, error)
-  toast.error(error?.response?.data?.error || message)
+  const responseData = error?.response?.data
+  const detail =
+    responseData?.error
+    || (typeof responseData === 'string' ? responseData : null)
+    || error?.message
+  toast.error(detail || message)
   throw error
 }
 
@@ -53,9 +58,9 @@ export const updateOrderStatus = async (id, status) => {
   }
 }
 
-export const createRazorpayPaymentOrder = async (amount) => {
+export const createRazorpayPaymentOrder = async ({ items, couponCode }) => {
   try {
-    const response = await api.post('/orders/payment/razorpay-order', { amount })
+    const response = await api.post('/orders/payment/razorpay-order', { items, couponCode })
     return response.data
   } catch (error) {
     withErrorToast('Failed to initialize payment', error)
@@ -68,5 +73,28 @@ export const verifyRazorpayPayment = async (payload) => {
     return response.data
   } catch (error) {
     withErrorToast('Payment verification failed', error)
+  }
+}
+
+export const cancelOrder = async (orderId, userId) => {
+  try {
+    const response = await api.post(`/orders/${orderId}/cancel`, { userId })
+    toast.success('Order cancelled successfully')
+    return response.data
+  } catch (error) {
+    withErrorToast('Failed to cancel order', error)
+  }
+}
+
+export const submitProductRating = async (orderId, productId, userId, rating) => {
+  try {
+    const response = await api.post(`/orders/${orderId}/items/${productId}/rating`, {
+      userId,
+      rating,
+    })
+    toast.success('Thanks for your rating!')
+    return response.data
+  } catch (error) {
+    withErrorToast('Failed to submit rating', error)
   }
 }

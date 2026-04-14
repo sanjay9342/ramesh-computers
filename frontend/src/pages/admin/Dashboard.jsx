@@ -1,12 +1,19 @@
-import React, { useState, useEffect } from 'react'
-import { FaBox, FaShoppingCart, FaRupeeSign, FaArrowUp, FaArrowDown } from 'react-icons/fa'
+import React, { useEffect, useState } from 'react'
+import { FaArrowDown, FaArrowUp, FaBox, FaRupeeSign, FaShoppingCart } from 'react-icons/fa'
 import { getAllOrders } from '../../firebase/services/orderService'
 import { getAllProducts } from '../../services/productService'
+import { getAllCoupons } from '../../services/couponService'
+import { getUsers } from '../../services/adminService'
+import { formatCurrency } from '../../utils/formatters'
 
 function Dashboard() {
   const [stats, setStats] = useState([])
   const [recentOrders, setRecentOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [overview, setOverview] = useState({
+    activeCoupons: 0,
+    totalCustomers: 0,
+  })
   const brands = ['HP', 'Dell', 'Lenovo', 'ASUS', 'Acer', 'MSI', 'Apple', 'Samsung', 'LG', 'Canon']
 
   useEffect(() => {
@@ -16,38 +23,45 @@ function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      
-      // Fetch orders and products
-      const [orders, products] = await Promise.all([
+
+      const [orders, products, coupons, users] = await Promise.all([
         getAllOrders(),
-        getAllProducts()
+        getAllProducts(),
+        getAllCoupons(),
+        getUsers(),
       ])
 
-      // Calculate stats
-      const totalRevenue = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0)
-      const pendingOrders = orders.filter(o => o.status === 'confirmed' || o.status === 'packed').length
-      const shippedOrders = orders.filter(o => o.status === 'shipped').length
-      const deliveredOrders = orders.filter(o => o.status === 'delivered').length
+      const totalRevenue = orders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0)
+      const pendingOrders = orders.filter((order) => order.status === 'confirmed' || order.status === 'packed').length
+      const deliveredOrders = orders.filter((order) => order.status === 'delivered').length
+      const activeCoupons = coupons.filter((coupon) => coupon.active).length
+      const totalCustomers = users.filter((user) => user.role !== 'admin').length
 
       setStats([
         { label: 'Total Orders', value: orders.length.toString(), icon: <FaShoppingCart />, change: '+12%', up: true },
         { label: 'Total Products', value: products.length.toString(), icon: <FaBox />, change: '+5%', up: true },
         { label: 'Pending Orders', value: pendingOrders.toString(), icon: <FaShoppingCart />, change: '-3%', up: false },
-        { label: 'Revenue', value: `₹${(totalRevenue / 100000).toFixed(1)}L`, icon: <FaRupeeSign />, change: '+8%', up: true },
+        { label: 'Revenue', value: formatCurrency(totalRevenue), icon: <FaRupeeSign />, change: `${deliveredOrders} delivered`, up: true },
       ])
 
-      // Get recent orders (last 5)
-      setRecentOrders(orders.slice(0, 5))
+      setOverview({
+        activeCoupons,
+        totalCustomers,
+      })
 
+      setRecentOrders(orders.slice(0, 5))
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
-      // Set default stats on error
       setStats([
         { label: 'Total Orders', value: '0', icon: <FaShoppingCart />, change: '+0%', up: true },
         { label: 'Total Products', value: '0', icon: <FaBox />, change: '+0%', up: true },
         { label: 'Pending Orders', value: '0', icon: <FaShoppingCart />, change: '+0%', up: true },
-        { label: 'Revenue', value: '₹0L', icon: <FaRupeeSign />, change: '+0%', up: true },
+        { label: 'Revenue', value: formatCurrency(0), icon: <FaRupeeSign />, change: '+0%', up: true },
       ])
+      setOverview({
+        activeCoupons: 0,
+        totalCustomers: 0,
+      })
     } finally {
       setLoading(false)
     }
@@ -55,11 +69,11 @@ function Dashboard() {
 
   const getStatusBadge = (status) => {
     const colors = {
-      confirmed: 'bg-blue-100 text-blue-800',
-      packed: 'bg-yellow-100 text-yellow-800',
-      shipped: 'bg-purple-100 text-purple-800',
-      delivered: 'bg-green-100 text-green-800',
-      cancelled: 'bg-red-100 text-red-800'
+      confirmed: 'bg-fk-blue text-white',
+      packed: 'bg-fk-yellow text-white',
+      shipped: 'bg-fk-teal text-white',
+      delivered: 'bg-fk-blue-dark text-white',
+      cancelled: 'bg-red-100 text-red-800',
     }
     return colors[status] || 'bg-gray-100 text-gray-800'
   }
@@ -76,7 +90,6 @@ function Dashboard() {
     <div>
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h1>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat, index) => (
           <div key={index} className="bg-white rounded-lg shadow p-6">
@@ -84,7 +97,7 @@ function Dashboard() {
               <div className="w-12 h-12 bg-fk-blue bg-opacity-10 rounded-full flex items-center justify-center text-fk-blue">
                 {stat.icon}
               </div>
-              <div className={`flex items-center gap-1 text-sm ${stat.up ? 'text-green-500' : 'text-red-500'}`}>
+              <div className={`flex items-center gap-1 text-sm ${stat.up ? 'text-fk-teal' : 'text-red-500'}`}>
                 {stat.up ? <FaArrowUp /> : <FaArrowDown />}
                 {stat.change}
               </div>
@@ -95,7 +108,17 @@ function Dashboard() {
         ))}
       </div>
 
-      {/* Recent Orders */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="bg-white rounded-lg shadow p-6">
+          <p className="text-sm text-gray-500">Active Coupons</p>
+          <p className="text-2xl font-bold text-gray-800">{overview.activeCoupons}</p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <p className="text-sm text-gray-500">Customers</p>
+          <p className="text-2xl font-bold text-gray-800">{overview.totalCustomers}</p>
+        </div>
+      </div>
+
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-bold text-gray-800 mb-4">Recent Orders</h2>
         {recentOrders.length === 0 ? (
@@ -116,11 +139,9 @@ function Dashboard() {
                   <tr key={order.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4">{order.id}</td>
                     <td className="py-3 px-4">{order.shippingAddress?.name || 'N/A'}</td>
-                    <td className="py-3 px-4">₹{order.totalAmount?.toLocaleString()}</td>
+                    <td className="py-3 px-4">{formatCurrency(order.totalAmount)}</td>
                     <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        getStatusBadge(order.status)
-                      }`}>
+                      <span className={`px-2 py-1 rounded text-xs ${getStatusBadge(order.status)}`}>
                         {order.status}
                       </span>
                     </td>
@@ -132,7 +153,6 @@ function Dashboard() {
         )}
       </div>
 
-      {/* Top Brands */}
       <div className="bg-white rounded-lg shadow p-6 mt-6">
         <h2 className="text-lg font-bold text-gray-800 mb-4">Top Brands</h2>
         <div className="relative overflow-hidden rounded-xl border border-gray-100">

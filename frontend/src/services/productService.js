@@ -6,6 +6,9 @@ const normalizeProduct = (product) => {
     ...product,
     image,
     images: product.images || (image ? [image] : []),
+    highlights: Array.isArray(product.highlights) ? product.highlights : [],
+    specs: product.specs && typeof product.specs === 'object' ? product.specs : {},
+    sku: product.sku || '',
   }
 }
 
@@ -33,4 +36,3 @@ export const deleteProduct = async (id) => {
   const response = await api.delete(`/products/${id}`)
   return response.data
 }
-

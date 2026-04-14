@@ -117,3 +117,18 @@ export const sendAdminPendingOrderReminder = async (order) => {
     `,
   })
 }
+
+export const sendAdminOrderCancelled = async (order) => {
+  if (!adminEmail) return false
+  return sendEmail({
+    to: adminEmail,
+    subject: `Order cancelled by customer: ${order.id}`,
+    html: `
+      <h3>Order Cancelled</h3>
+      <p><strong>Order ID:</strong> ${order.id}</p>
+      <p><strong>Customer:</strong> ${order.shippingAddress?.name || 'N/A'} (${order.userEmail || 'No email'})</p>
+      <p><strong>Total:</strong> ${formatCurrency(order.totalAmount)}</p>
+      <p>Status has been updated to cancelled.</p>
+    `,
+  })
+}

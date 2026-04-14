@@ -19,6 +19,9 @@ function Register() {
   })
   const [showPassword, setShowPassword] = useState(false)
 
+  const normalizePhoneDigits = (value) => String(value || '').replace(/\D/g, '')
+  const isValidPhone = (value) => normalizePhoneDigits(value).length === 10
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
@@ -35,18 +38,24 @@ function Register() {
       toast.error('Passwords do not match')
       return
     }
-    
+
+    if (!isValidPhone(formData.phone)) {
+      toast.error('Please enter a valid 10-digit mobile number')
+      return
+    }
+
     if (formData.password.length < 6) {
       toast.error('Password must be at least 6 characters')
       return
     }
     
     const normalizedEmail = formData.email.trim().toLowerCase()
+    const normalizedPhone = normalizePhoneDigits(formData.phone)
     const result = await dispatch(registerUser({
       email: normalizedEmail,
       password: formData.password,
       name: formData.name.trim(),
-      phone: formData.phone.trim()
+      phone: normalizedPhone
     }))
     
     if (registerUser.fulfilled.match(result)) {
@@ -64,7 +73,7 @@ function Register() {
 
   return (
     <div className="bg-fk-bg min-h-screen py-8">
-      <div className="max-w-md mx-auto px-4">
+      <div className="max-w-md mx-auto px-0">
         <div className="bg-white rounded shadow-fk p-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Create Account</h2>
           
@@ -82,6 +91,7 @@ function Register() {
                   onChange={handleChange}
                   placeholder="Enter your name"
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-fk-blue"
+                  required
                 />
               </div>
             </div>
@@ -98,6 +108,7 @@ function Register() {
                   onChange={handleChange}
                   placeholder="Enter your email"
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-fk-blue"
+                  required
                 />
               </div>
             </div>
@@ -114,6 +125,9 @@ function Register() {
                   onChange={handleChange}
                   placeholder="Enter your phone number"
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-fk-blue"
+                  inputMode="numeric"
+                  pattern="[0-9]{10}"
+                  required
                 />
               </div>
             </div>
@@ -130,6 +144,7 @@ function Register() {
                   onChange={handleChange}
                   placeholder="Create a password"
                   className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded focus:outline-none focus:border-fk-blue"
+                  required
                 />
                 <button
                   type="button"
@@ -153,6 +168,7 @@ function Register() {
                   onChange={handleChange}
                   placeholder="Confirm your password"
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-fk-blue"
+                  required
                 />
               </div>
             </div>
@@ -180,3 +196,5 @@ function Register() {
 }
 
 export default Register
+
+

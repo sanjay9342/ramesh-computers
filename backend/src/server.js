@@ -4,6 +4,7 @@ import 'dotenv/config'
 
 import productRoutes from './routes/products.js'
 import bannerRoutes from './routes/banners.js'
+import couponRoutes from './routes/coupons.js'
 import orderRoutes from './routes/orders.js'
 import uploadRoutes from './routes/upload.js'
 import adminRoutes from './routes/admin.js'
@@ -14,11 +15,17 @@ const PORT = process.env.PORT || 5000
 const orderReminderSweepMs = Number(process.env.ORDER_REMINDER_SWEEP_MS || 1800000)
 
 // ================= CORS FIX =================
-const allowedOrigins = [
+const defaultAllowedOrigins = [
   'http://localhost:5174',
   'http://localhost:5173',
-  'https://rameshcomputers.netlify.app'
+  'https://rameshcomputers.netlify.app',
+  'https://ramesh-computers.netlify.app',
 ]
+const envAllowedOrigins = String(process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envAllowedOrigins]))
 
 app.use(
   cors({
@@ -42,19 +49,21 @@ app.use(express.json())
 // Routes
 app.use('/api/products', productRoutes)
 app.use('/api/banners', bannerRoutes)
+app.use('/api/coupons', couponRoutes)
 app.use('/api/orders', orderRoutes)
 app.use('/api/upload', uploadRoutes)
 app.use('/api/admin', adminRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Ramesh Computers API is running' })
+  res.json({ status: 'ok', message: 'Sowmi Electronics API is running' })
 })
 
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack)
-  res.status(500).json({ error: err.message || 'Something went wrong!' })
+  const statusCode = Number(err.statusCode || 500)
+  res.status(statusCode).json({ error: err.message || 'Something went wrong!' })
 })
 
 app.listen(PORT, () => {
