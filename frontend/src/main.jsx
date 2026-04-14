@@ -7,10 +7,7 @@ import { ToastContainer } from 'react-toastify'
 
 import App from './App.jsx'
 import { store, persistor } from './redux/store'
-import LoadingScreen from './components/LoadingScreen.jsx'
 import { AppLoadProvider } from './context/AppLoadContext.jsx'
-import InitialLoadOverlay from './components/InitialLoadOverlay.jsx'
-import { STORE_INFO } from './data/storeInfo.js'
 
 import 'react-toastify/dist/ReactToastify.css'
 import './index.css'
@@ -18,10 +15,9 @@ import './index.css'
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <Provider store={store}>
-      <PersistGate loading={<LoadingScreen text={`Loading ${STORE_INFO.name}...`} />} persistor={persistor}>
+      <PersistGate loading={null} persistor={persistor}>
         <BrowserRouter>
           <AppLoadProvider>
-            <InitialLoadOverlay />
             <App />
             <ToastContainer
               position="top-right"

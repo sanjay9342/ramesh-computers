@@ -3,6 +3,7 @@ import { FaEye, FaSearch, FaTimes } from 'react-icons/fa'
 import { toast } from 'react-toastify'
 import { getAllOrders, updateOrderStatus } from '../../firebase/services/orderService'
 import { formatCurrency } from '../../utils/formatters'
+import { getOrderDisplayId, matchesOrderSearch } from '../../utils/orderDisplay'
 
 function AdminOrders() {
   const [orders, setOrders] = useState([])
@@ -30,8 +31,9 @@ function AdminOrders() {
   const updateStatus = async (orderId, newStatus) => {
     try {
       await updateOrderStatus(orderId, newStatus)
+      const orderLabel = getOrderDisplayId(orders.find((order) => order.id === orderId) || { id: orderId })
       await fetchOrders()
-      toast.success(`Order ${orderId} status updated to ${newStatus}`)
+      toast.success(`Order ${orderLabel} status updated to ${newStatus}`)
     } catch (error) {
       console.error('Error updating order status:', error)
     }
@@ -62,9 +64,8 @@ function AdminOrders() {
   }
 
   const filteredOrders = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase()
-    if (!term) return orders
-    return orders.filter((order) => String(order.id || '').toLowerCase().includes(term))
+    if (!searchTerm.trim()) return orders
+    return orders.filter((order) => matchesOrderSearch(order, searchTerm))
   }, [orders, searchTerm])
 
   const formatDate = (timestamp) => {
@@ -90,10 +91,10 @@ function AdminOrders() {
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <div className="relative">
           <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by Order ID"
-            value={searchTerm}
+            <input
+              type="text"
+              placeholder="Search by order number"
+              value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-fk-blue"
           />
@@ -104,7 +105,7 @@ function AdminOrders() {
         <div className="text-center py-8 text-gray-500">Loading orders...</div>
       ) : filteredOrders.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          {searchTerm ? 'No orders match that ID.' : 'No orders yet.'}
+          {searchTerm ? 'No orders match that number.' : 'No orders yet.'}
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -113,7 +114,7 @@ function AdminOrders() {
               <article key={order.id} className="p-4 space-y-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-gray-900">Order {order.id}</p>
+                    <p className="font-semibold text-gray-900">Order {getOrderDisplayId(order)}</p>
                     <p className="text-sm text-gray-500 mt-1">{order.shippingAddress?.name || 'N/A'}</p>
                   </div>
                   <span className={`px-2 py-1 rounded text-xs ${getStatusBadge(order.status)}`}>
@@ -173,7 +174,7 @@ function AdminOrders() {
             <table className="w-full min-w-[860px]">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Order ID</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Order Number</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Customer</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Date</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Amount</th>
@@ -185,7 +186,7 @@ function AdminOrders() {
               <tbody>
                 {filteredOrders.map((order) => (
                   <tr key={order.id} className="border-t hover:bg-gray-50">
-                    <td className="py-3 px-4 font-medium">{order.id}</td>
+                    <td className="py-3 px-4 font-medium">{getOrderDisplayId(order)}</td>
                     <td className="py-3 px-4">{order.shippingAddress?.name || 'N/A'}</td>
                     <td className="py-3 px-4">{formatDate(order.orderedAt)}</td>
                     <td className="py-3 px-4">{formatCurrency(order.totalAmount)}</td>
@@ -236,7 +237,7 @@ function AdminOrders() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-5 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Order Details - {selectedOrder.id}</h2>
+              <h2 className="text-xl font-bold">Order Details - {getOrderDisplayId(selectedOrder)}</h2>
               <button
                 onClick={() => {
                   setShowDetailModal(false)
@@ -253,7 +254,7 @@ function AdminOrders() {
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-2">Order Information</h3>
                   <p className="text-sm">
-                    <span className="font-medium">Order ID:</span> {selectedOrder.id}
+                    <span className="font-medium">Order Number:</span> {getOrderDisplayId(selectedOrder)}
                   </p>
                   <p className="text-sm">
                     <span className="font-medium">Date:</span> {formatDate(selectedOrder.orderedAt)}

@@ -26,7 +26,7 @@ function InitialLoadOverlay() {
     }
   }, [exiting, homeReady, minElapsed, shouldWaitForHome])
 
-  if (!visible) return null
+  if (!shouldWaitForHome || !visible) return null
 
   return <LoadingScreen text="" overlay exiting={exiting} />
 }

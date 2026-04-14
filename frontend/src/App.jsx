@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -29,6 +29,7 @@ import AdminCustomers from './pages/admin/Customers'
 
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
+import LoadingScreen from './components/LoadingScreen'
 
 import { fetchProducts } from './redux/slices/productSlice'
 import { setUser } from './redux/slices/userSlice'
@@ -36,6 +37,7 @@ import { auth, db } from './firebase/config'
 
 function App() {
   const dispatch = useDispatch()
+  const [authResolved, setAuthResolved] = useState(false)
 
   useEffect(() => {
     dispatch(fetchProducts()).catch((err) => {
@@ -46,12 +48,14 @@ function App() {
   useEffect(() => {
     if (!auth) {
       dispatch(setUser(null))
+      setAuthResolved(true)
       return undefined
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         dispatch(setUser(null))
+        setAuthResolved(true)
         return
       }
 
@@ -71,11 +75,27 @@ function App() {
         )
       } catch (error) {
         console.error('Failed restoring auth user:', error)
+        dispatch(
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName || '',
+            phone: '',
+            address: null,
+            role: 'user',
+          })
+        )
+      } finally {
+        setAuthResolved(true)
       }
     })
 
     return () => unsubscribe()
   }, [dispatch])
+
+  if (!authResolved) {
+    return <LoadingScreen text="Restoring your account..." />
+  }
 
   return (
     <Routes>

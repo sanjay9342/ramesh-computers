@@ -6,6 +6,7 @@ import {
   sendAdminOrderCancelled,
   sendCustomerOrderStatusEmail,
 } from '../lib/notifications.js'
+import { reserveNextOrderNumber, serializeOrder } from '../lib/orderIdentity.js'
 import { buildOrderPricing } from '../lib/orderPricing.js'
 import { requireAdmin, requireAuth, requireSelfOrAdmin } from '../middleware/auth.js'
 
@@ -13,6 +14,7 @@ const router = express.Router()
 const ordersCollection = firestore.collection('orders')
 const productsCollection = firestore.collection('products')
 const couponsCollection = firestore.collection('coupons')
+const orderCounterRef = firestore.collection('_meta').doc('orderCounter')
 const allowedStatuses = ['confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled']
 const cancelableStatuses = ['confirmed', 'packed']
 const acceptedPaymentMethods = new Set(['cod', 'razorpay'])
@@ -133,7 +135,7 @@ const canAccessOrder = (order, reqUser) =>
 router.get('/', requireAdmin, async (req, res, next) => {
   try {
     const snapshot = await ordersCollection.get()
-    const orders = sortOrdersByDateDesc(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })))
+    const orders = sortOrdersByDateDesc(snapshot.docs.map((doc) => serializeOrder(doc.id, doc.data())))
     res.json(orders)
   } catch (error) {
     next(error)
@@ -144,7 +146,7 @@ router.get('/', requireAdmin, async (req, res, next) => {
 router.get('/user/:userId', requireAuth, requireSelfOrAdmin((req) => req.params.userId), async (req, res, next) => {
   try {
     const snapshot = await ordersCollection.where('userId', '==', req.params.userId).get()
-    const userOrders = sortOrdersByDateDesc(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })))
+    const userOrders = sortOrdersByDateDesc(snapshot.docs.map((doc) => serializeOrder(doc.id, doc.data())))
     res.json(userOrders)
   } catch (error) {
     next(error)
@@ -159,7 +161,7 @@ router.get('/:id', requireAuth, async (req, res, next) => {
       return res.status(404).json({ error: 'Order not found' })
     }
 
-    const order = { id: doc.id, ...doc.data() }
+    const order = serializeOrder(doc.id, doc.data())
     if (!canAccessOrder(order, req.user)) {
       return res.status(403).json({ error: 'You are not allowed to access this order' })
     }
@@ -266,8 +268,10 @@ router.post('/', requireAuth, async (req, res, next) => {
         requestedCouponCode,
         transaction,
       })
+      const orderNumber = await reserveNextOrderNumber(transaction, orderCounterRef, now)
 
       const newOrder = {
+        orderNumber,
         userId: req.user.uid,
         userEmail: req.user.email || shippingAddress.email || '',
         items: context.pricing.items,
@@ -307,7 +311,7 @@ router.post('/', requireAuth, async (req, res, next) => {
       }
 
       transaction.set(orderRef, newOrder)
-      createdOrder = { id: orderRef.id, ...newOrder }
+      createdOrder = serializeOrder(orderRef.id, newOrder)
     })
 
     await sendAdminOrderAlert(createdOrder).catch((error) =>
@@ -419,7 +423,7 @@ router.post('/:id/items/:productId/rating', requireAuth, async (req, res, next) 
         { merge: true }
       )
 
-      updatedOrder = { id: orderDoc.id, ...orderData, ...orderUpdate }
+      updatedOrder = serializeOrder(orderDoc.id, { ...orderData, ...orderUpdate })
       updatedProduct = {
         id: productDoc.id,
         ...productData,
@@ -507,7 +511,7 @@ router.post('/:id/cancel', requireAuth, async (req, res, next) => {
       }
 
       transaction.set(orderRef, orderUpdate, { merge: true })
-      updatedOrder = { id: orderDoc.id, ...orderData, ...orderUpdate }
+      updatedOrder = serializeOrder(orderDoc.id, { ...orderData, ...orderUpdate })
     })
 
     await sendCustomerOrderStatusEmail(updatedOrder, 'cancelled').catch((error) =>
@@ -550,10 +554,11 @@ router.put('/:id/status', requireAdmin, async (req, res, next) => {
     }
 
     await docRef.set(updated, { merge: true })
-    await sendCustomerOrderStatusEmail({ id: req.params.id, ...updated }, status).catch((error) =>
+    const serializedOrder = serializeOrder(req.params.id, updated)
+    await sendCustomerOrderStatusEmail(serializedOrder, status).catch((error) =>
       console.error('Failed to notify customer:', error.message)
     )
-    res.json({ id: req.params.id, ...updated })
+    res.json(serializedOrder)
   } catch (error) {
     next(error)
   }

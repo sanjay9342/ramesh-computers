@@ -5,6 +5,7 @@ import { getAllProducts } from '../../services/productService'
 import { getAllCoupons } from '../../services/couponService'
 import { getUsers } from '../../services/adminService'
 import { formatCurrency } from '../../utils/formatters'
+import { getOrderDisplayId } from '../../utils/orderDisplay'
 
 function Dashboard() {
   const [stats, setStats] = useState([])
@@ -128,7 +129,7 @@ function Dashboard() {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Order ID</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Order Number</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Customer</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Amount</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
@@ -137,7 +138,7 @@ function Dashboard() {
               <tbody>
                 {recentOrders.map((order) => (
                   <tr key={order.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{order.id}</td>
+                    <td className="py-3 px-4">{getOrderDisplayId(order)}</td>
                     <td className="py-3 px-4">{order.shippingAddress?.name || 'N/A'}</td>
                     <td className="py-3 px-4">{formatCurrency(order.totalAmount)}</td>
                     <td className="py-3 px-4">

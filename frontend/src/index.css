@@ -547,7 +547,7 @@
   align-items: center;
   gap: 16px;
   padding: 18px 20px;
-  border-radius: 16px;
+  border-radius: 8px;
   border: 1px solid var(--brand-border);
   background: linear-gradient(135deg, var(--brand-rose) 0%, #fffdfa 100%);
   box-shadow: 0 16px 28px rgba(94, 13, 54, 0.12);

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import {
@@ -17,6 +17,7 @@ import {
 import { cancelOrder, getUserOrders, submitProductRating } from '../firebase/services/orderService'
 import LoadingScreen from '../components/LoadingScreen'
 import { formatCurrency } from '../utils/formatters'
+import { getOrderDisplayId } from '../utils/orderDisplay'
 
 function Orders() {
   const { user } = useSelector((state) => state.user)
@@ -46,21 +47,6 @@ function Orders() {
 
     loadOrders()
   }, [user?.uid])
-
-  const orderStats = useMemo(() => {
-    const totalSpend = orders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0)
-    const delivered = orders.filter((order) => order.status === 'delivered').length
-    const active = orders.filter(
-      (order) => order.status && !['delivered', 'cancelled'].includes(order.status)
-    ).length
-
-    return {
-      total: orders.length,
-      delivered,
-      active,
-      totalSpend,
-    }
-  }, [orders])
 
   const getStatusSteps = (status) => {
     const steps = [
@@ -214,51 +200,22 @@ function Orders() {
   return (
     <div className="min-h-screen bg-[#f8fafc] py-4 sm:py-6">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-3 sm:px-4 lg:px-6">
-        <section className="overflow-hidden rounded-lg border border-[#e5ecf3] bg-white shadow-sm">
-          <div className="bg-[linear-gradient(135deg,#f2fbff_0%,#fff7ee_52%,#fdf2f6_100%)] p-5 sm:p-6">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#2a6ca8]">Order Dashboard</p>
-                <h1 className="mt-2 text-2xl font-bold text-gray-900 sm:text-3xl">My Orders</h1>
-                <p className="mt-2 text-sm text-gray-600 sm:text-base">
-                  Track every order, manage delivery status, review delivered products, and check billing details without hunting through long lists.
-                </p>
-              </div>
-
-              <Link
-                to="/products"
-                className="inline-flex items-center justify-center rounded-lg border border-[#d5dfeb] bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-[#f8fafc]"
-              >
-                Continue Shopping
-              </Link>
-            </div>
-
-            <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <div className="rounded-lg border border-[#deebf6] bg-white/90 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-500">Total Orders</p>
-                <p className="mt-2 text-2xl font-bold text-gray-900">{orderStats.total}</p>
-              </div>
-              <div className="rounded-lg border border-[#deebf6] bg-white/90 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-500">Active</p>
-                <p className="mt-2 text-2xl font-bold text-gray-900">{orderStats.active}</p>
-              </div>
-              <div className="rounded-lg border border-[#deebf6] bg-white/90 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-500">Delivered</p>
-                <p className="mt-2 text-2xl font-bold text-gray-900">{orderStats.delivered}</p>
-              </div>
-              <div className="rounded-lg border border-[#deebf6] bg-white/90 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-500">Total Spend</p>
-                <p className="mt-2 text-2xl font-bold text-gray-900">{formatCurrency(orderStats.totalSpend)}</p>
-              </div>
-            </div>
-          </div>
-        </section>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#e5ecf3] bg-white px-4 py-4 shadow-sm sm:px-5">
+          <h1 className="text-2xl font-bold text-gray-900">My Orders</h1>
+          <Link
+            to="/products"
+            className="inline-flex items-center justify-center rounded-lg border border-[#d5dfeb] bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-[#f8fafc]"
+          >
+            Continue Shopping
+          </Link>
+        </div>
 
         <div className="space-y-4">
           {orders.map((order) => {
             const expanded = expandedOrder === order.id
             const orderItems = Array.isArray(order.items) ? order.items : []
             const statusLabel = (order.status || 'unknown').replace(/_/g, ' ')
+            const displayOrderId = getOrderDisplayId(order)
 
             return (
               <article
@@ -272,7 +229,7 @@ function Orders() {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-lg border border-[#d6e3ef] bg-[#f8fbff] px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#245a90]">
-                          Order #{order.id}
+                          Order {displayOrderId}
                         </span>
                         <span
                           className={`${getStatusBadgeClass(order.status)} ${
@@ -404,7 +361,7 @@ function Orders() {
                       </section>
                     ) : null}
 
-                    <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(300px,1fr)]">
+                    <div className="mt-4 grid items-start gap-4 rounded-lg border border-[#e5ecf3] bg-white p-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(300px,1fr)]">
                       <section>
                         <div className="flex items-center justify-between gap-3">
                           <div>
@@ -414,7 +371,7 @@ function Orders() {
                           <p className="text-sm font-medium text-gray-500">{orderItems.length} item{orderItems.length === 1 ? '' : 's'}</p>
                         </div>
 
-                        <div className="mt-4 space-y-3">
+                        <div className="mt-3 space-y-3">
                           {orderItems.map((item, index) => {
                             const itemKey = getRatingKey(order.id, item.id)
                             const lineTotal = Number(item.price || 0) * Number(item.quantity || 1)
@@ -488,7 +445,7 @@ function Orders() {
                         </div>
                       </section>
 
-                      <div className="space-y-5 border-t border-[#e8edf4] pt-5 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
+                      <div className="space-y-4 border-t border-[#e8edf4] pt-4 xl:border-l xl:border-t-0 xl:pl-4 xl:pt-0">
                         <section className="space-y-3">
                           <div>
                             <h2 className="text-base font-bold text-gray-900">Delivery Details</h2>
@@ -505,7 +462,7 @@ function Orders() {
                           </div>
                         </section>
 
-                        <section className="space-y-3 border-t border-[#e8edf4] pt-5">
+                        <section className="space-y-3 border-t border-[#e8edf4] pt-4">
                           <div>
                             <h2 className="text-base font-bold text-gray-900">Payment Summary</h2>
                             <p className="text-sm text-gray-500">Billing and payment details for this order.</p>

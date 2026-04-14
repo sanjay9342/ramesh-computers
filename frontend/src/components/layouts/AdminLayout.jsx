@@ -17,6 +17,7 @@ import { AnimatePresence } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { logoutUser } from '../../redux/slices/userSlice'
 import { api } from '../../utils/api'
+import { getOrderDisplayId } from '../../utils/orderDisplay'
 import PageTransition from '../PageTransition'
 import { STORE_INFO } from '../../data/storeInfo'
 
@@ -84,7 +85,7 @@ function AdminLayout() {
         if (hasLoadedNotificationsRef.current && newUnseenOrders.length > 0) {
           const latestOrder = newUnseenOrders[0]
           toast.info(
-            `New order ${latestOrder.id} from ${latestOrder.shippingAddress?.name || 'Customer'} is awaiting action.`
+            `New order ${getOrderDisplayId(latestOrder)} from ${latestOrder.shippingAddress?.name || 'Customer'} is awaiting action.`
           )
         }
         hasLoadedNotificationsRef.current = true
@@ -213,7 +214,7 @@ function AdminLayout() {
                         onClick={openOrdersFromNotification}
                         className="w-full text-left px-4 py-3 border-b border-fk-border hover:bg-fk-bg"
                       >
-                        <p className="text-sm font-medium">Order {order.id}</p>
+                        <p className="text-sm font-medium">Order {getOrderDisplayId(order)}</p>
                         <p className="text-xs text-gray-600">{order.shippingAddress?.name || 'Customer'}</p>
                         <p className="text-xs text-gray-500">
                           Rs. {Number(order.totalAmount || 0).toLocaleString('en-IN')}

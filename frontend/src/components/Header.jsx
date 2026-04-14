@@ -6,6 +6,8 @@ import {
   FaShoppingCart,
   FaHeart,
   FaUser,
+  FaEnvelope,
+  FaPhone,
   FaSignOutAlt,
   FaBox,
   FaLaptop,
@@ -51,6 +53,23 @@ function Header() {
     })),
   ]
 
+  const formatPhoneNumber = (value) => {
+    const digits = String(value || '').replace(/\D/g, '')
+
+    if (digits.length === 10) {
+      return `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`
+    }
+
+    if (digits.length === 12 && digits.startsWith('91')) {
+      return `+91 ${digits.slice(2, 7)} ${digits.slice(7)}`
+    }
+
+    return value || 'Not added yet'
+  }
+
+  const userName = String(user?.displayName || '').trim() || 'Account'
+  const userEmail = String(user?.email || '').trim() || 'No email added'
+  const userPhone = formatPhoneNumber(user?.phone)
   const handleSearch = (e) => {
     e.preventDefault()
     if (searchQuery.trim()) {
@@ -79,7 +98,7 @@ function Header() {
     <>
       <header className="sticky top-0 z-50 border-b border-fk-border bg-white/95 shadow-[0_10px_24px_rgba(94,13,54,0.06)] backdrop-blur">
       <div className="w-full px-0 pr-3 sm:pr-4 lg:pr-6">
-        <div className="flex items-center justify-between py-4 sm:py-2 min-h-[76px] sm:min-h-0">
+        <div className="flex items-center justify-between py-[18px] sm:py-2 min-h-[82px] sm:min-h-0">
           <Link to="/" className="flex items-center self-center shrink-0 ml-3 sm:ml-4 lg:ml-6">
             <img
               src={STORE_INFO.logo}
@@ -134,13 +153,13 @@ function Header() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 text-[#3f212d] font-semibold hover:text-fk-blue"
                 >
-                  <abbr title={user?.displayName || user?.email || 'Account'} className="no-underline">
+                  <abbr title={userName || userEmail || 'Account'} className="no-underline">
                     <FaUser />
                   </abbr>
-                  <span className="hidden sm:inline">{user?.displayName || 'Account'}</span>
+                  <span className="hidden sm:inline">{userName}</span>
                 </button>
                 {showUserMenu && (
-                  <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-lg border border-fk-border shadow-fk py-2 z-50">
+                  <div className="absolute top-full right-0 mt-1 w-72 max-w-[calc(100vw-16px)] bg-white rounded-lg border border-fk-border shadow-fk py-2 z-50">
                     <Link
                       to="/orders"
                       className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-fk-bg"
@@ -157,6 +176,25 @@ function Header() {
                       <FaHeart className="text-fk-teal" />
                       Wishlist
                     </Link>
+                    <div className="mx-3 my-2 rounded-md border border-fk-border bg-[#fff8fa] px-3 py-3">
+                      <p className="text-sm font-semibold text-[#2f1b24]">{userName}</p>
+                      <div className="mt-3 space-y-2 text-xs text-[#6f5a66]">
+                        <div className="flex items-start gap-2">
+                          <FaEnvelope className="mt-0.5 shrink-0 text-fk-blue" />
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-medium uppercase tracking-[0.04em] text-[#9a7a88]">Email</p>
+                            <p className="break-all">{userEmail}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <FaPhone className="mt-0.5 shrink-0 text-fk-teal" />
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-medium uppercase tracking-[0.04em] text-[#9a7a88]">Phone</p>
+                            <p>{userPhone}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <button
                       onClick={handleLogout}
                       className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-fk-bg w-full"
@@ -217,7 +255,7 @@ function Header() {
                 }`}
               >
                 <span
-                  className={`w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-lg sm:rounded-2xl flex items-center justify-center text-sm sm:text-lg md:text-xl transition-colors ${
+                  className={`w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-lg sm:rounded-2xl flex items-center justify-center text-[15px] sm:text-lg md:text-xl transition-colors ${
                     isActive
                       ? 'bg-gradient-to-br from-fk-blue to-fk-teal text-white shadow-fk'
                       : 'bg-white border border-fk-border text-fk-blue group-hover:border-fk-blue group-hover:bg-fk-bg group-hover:text-fk-blue'

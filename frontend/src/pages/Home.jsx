@@ -55,7 +55,7 @@ function Home() {
   const brands = ['HP', 'Dell', 'Lenovo', 'ASUS', 'Acer', 'MSI', 'Apple', 'Samsung', 'LG', 'Canon', 'Luminous', 'V-Guard']
   const homeProductLimit = isMobile ? 4 : 8
   const homeSkeletonCount = isMobile ? 4 : 8
-  const topDealsLimit = 15
+  const topDealsLimit = 10
   const newArrivalsLimit = 15
   const bestSellingLimit = 8
   const laptopRowCardClass =
