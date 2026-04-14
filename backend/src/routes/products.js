@@ -42,6 +42,7 @@ const parseSpecs = (value) => {
 }
 
 const normalizeProductInput = (input = {}) => {
+  const category = String(input.category || '').trim().toLowerCase()
   const image = input.image || input.images?.[0] || ''
   const availableOffers = parseLineList(input.availableOffers)
   const highlights = parseLineList(input.highlights)
@@ -51,7 +52,7 @@ const normalizeProductInput = (input = {}) => {
     title: String(input.title || '').trim(),
     slug: String(input.slug || '').trim(),
     sku: String(input.sku || '').trim().toUpperCase(),
-    category: String(input.category || '').trim().toLowerCase(),
+    category,
     brand: String(input.brand || '').trim(),
     price: Number(input.price || 0),
     discountPrice: input.discountPrice ? Number(input.discountPrice) : null,
@@ -67,6 +68,7 @@ const normalizeProductInput = (input = {}) => {
     rating: Number(input.rating || 0),
     reviewCount: Number(input.reviewCount || 0),
     isFeatured: Boolean(input.isFeatured),
+    showInBestSelling: category === 'laptops' && Boolean(input.showInBestSelling),
     freeDelivery: input.freeDelivery !== false,
   }
 }

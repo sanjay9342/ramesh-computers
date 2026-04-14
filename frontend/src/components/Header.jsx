@@ -24,12 +24,7 @@ import { PRODUCT_CATEGORIES, STORE_INFO } from '../data/storeInfo'
 function Header() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [showCategories, setShowCategories] = useState(true)
   const userMenuRef = useRef(null)
-  const lastScrollYRef = useRef(0)
-  const lastToggleYRef = useRef(0)
-  const showCategoriesRef = useRef(true)
-  const tickingRef = useRef(false)
   const navigate = useNavigate()
   const location = useLocation()
   const dispatch = useDispatch()
@@ -80,84 +75,31 @@ function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  useEffect(() => {
-    showCategoriesRef.current = showCategories
-  }, [showCategories])
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (tickingRef.current) return
-      tickingRef.current = true
-
-      window.requestAnimationFrame(() => {
-        const currentY = window.scrollY || 0
-        const delta = currentY - lastScrollYRef.current
-        const minDelta = 2
-        const toggleDistance = 8
-        const topShowThreshold = 6
-
-        if (currentY <= topShowThreshold) {
-          if (!showCategoriesRef.current) {
-            showCategoriesRef.current = true
-            setShowCategories(true)
-          }
-          lastScrollYRef.current = currentY
-          lastToggleYRef.current = currentY
-          tickingRef.current = false
-          return
-        }
-
-        if (Math.abs(delta) >= minDelta) {
-          if (delta > 0 && showCategoriesRef.current) {
-            if (Math.abs(currentY - lastToggleYRef.current) >= toggleDistance) {
-              showCategoriesRef.current = false
-              lastToggleYRef.current = currentY
-              setShowCategories(false)
-            }
-          } else if (delta < 0 && !showCategoriesRef.current) {
-            if (Math.abs(currentY - lastToggleYRef.current) >= toggleDistance) {
-              showCategoriesRef.current = true
-              lastToggleYRef.current = currentY
-              setShowCategories(true)
-            }
-          }
-        }
-
-        lastScrollYRef.current = currentY
-        tickingRef.current = false
-      })
-    }
-
-    lastScrollYRef.current = window.scrollY || 0
-    lastToggleYRef.current = lastScrollYRef.current
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
   return (
-    <header className="sticky top-0 z-50 border-b border-fk-border bg-white/95 shadow-[0_10px_24px_rgba(94,13,54,0.06)] backdrop-blur">
+    <>
+      <header className="sticky top-0 z-50 border-b border-fk-border bg-white/95 shadow-[0_10px_24px_rgba(94,13,54,0.06)] backdrop-blur">
       <div className="w-full px-0 pr-3 sm:pr-4 lg:pr-6">
-        <div className="flex items-center justify-between py-2">
+        <div className="flex items-center justify-between py-4 sm:py-2 min-h-[76px] sm:min-h-0">
           <Link to="/" className="flex items-center self-center shrink-0 ml-3 sm:ml-4 lg:ml-6">
             <img
               src={STORE_INFO.logo}
               alt={STORE_INFO.name}
-              className="h-12 sm:h-14 md:h-16 w-auto max-w-[180px] sm:max-w-[220px] md:max-w-[260px] object-contain"
+              className="h-16 sm:h-14 md:h-16 w-auto max-w-[178px] sm:max-w-[220px] md:max-w-[260px] object-contain"
             />
           </Link>
 
-          <form onSubmit={handleSearch} className="md:hidden flex-1 max-w-[200px] mx-2">
+          <form onSubmit={handleSearch} className="md:hidden flex-1 max-w-[152px] mx-1.5">
             <div className="relative w-full">
               <input
                 type="text"
                 placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 pl-3 pr-10 rounded-full border border-fk-border bg-fk-bg focus:border-fk-blue focus:outline-none focus:ring-2 focus:ring-fk-blue/20 text-xs text-[#2f1b24] placeholder:text-[#9a7a88]"
+                className="w-full h-10 pl-3 pr-11 rounded-full border border-fk-border bg-fk-bg focus:border-fk-blue focus:outline-none focus:ring-2 focus:ring-fk-blue/20 text-sm text-[#2f1b24] placeholder:text-[#9a7a88]"
               />
               <button
                 type="submit"
-                className="absolute right-1 top-1 h-7 w-7 flex items-center justify-center bg-fk-blue hover:bg-fk-blue-dark rounded-full transition-colors"
+                className="absolute right-1 top-1 h-8 w-8 flex items-center justify-center bg-fk-blue hover:bg-fk-blue-dark rounded-full transition-colors"
               >
                 <FaSearch className="text-white text-xs" />
               </button>
@@ -185,7 +127,7 @@ function Header() {
             </div>
           </form>
 
-          <div className="flex items-center gap-4 md:gap-8 text-[#4a2735]">
+          <div className="flex items-center gap-2.5 md:gap-8 text-[#4a2735]">
             {isAuthenticated ? (
               <div className="relative" ref={userMenuRef}>
                 <button
@@ -226,7 +168,7 @@ function Header() {
                 )}
               </div>
             ) : (
-              <Link to="/login" className="text-[#3f212d] font-semibold hover:text-fk-blue">
+              <Link to="/login" className="text-[#3f212d] font-semibold text-[13px] sm:text-base hover:text-fk-blue">
                 Login
               </Link>
             )}
@@ -243,9 +185,9 @@ function Header() {
               <span className="hidden sm:inline">Wishlist</span>
             </Link>
 
-            <Link to="/cart" className="flex items-center gap-2 text-[#3f212d] font-semibold hover:text-fk-blue">
+            <Link to="/cart" className="flex items-center gap-1 sm:gap-2 text-[#3f212d] font-semibold hover:text-fk-blue">
               <div className="relative">
-                <FaShoppingCart className="text-xl" />
+                <FaShoppingCart className="text-base sm:text-xl" />
                 {totalQuantity > 0 && (
                   <span className="absolute -top-2 -right-2 bg-fk-blue text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
                     {totalQuantity}
@@ -257,52 +199,45 @@ function Header() {
           </div>
         </div>
       </div>
+      </header>
 
-      <div
-        className={`overflow-hidden border-t border-fk-border/70 bg-[#fff8fa] transition-[max-height,opacity,transform] duration-300 ease-in-out ${
-          showCategories
-            ? 'max-h-[120px] opacity-100 translate-y-0'
-            : 'max-h-0 opacity-0 -translate-y-2 pointer-events-none'
-        }`}
-      >
-        <div className="w-full px-0">
-          <nav className="flex items-center gap-6 md:gap-7 min-h-[64px] md:min-h-[80px] py-2 md:py-3 overflow-x-auto text-base font-semibold text-[#6f5a66] md:justify-between w-full pl-2 pr-2 sm:pl-3 sm:pr-3 lg:pl-6 lg:pr-6">
-            {categories.map((category) => {
-              const isActive =
-                (category.slug && location.pathname === `/category/${category.slug}`) ||
-                (!category.slug && location.pathname === '/')
+      <div className="w-full px-0 border-b border-fk-border/70 bg-[#fff8fa]">
+        <nav className="navbar-category-scroll flex items-center gap-3 sm:gap-6 md:gap-7 min-h-[46px] sm:min-h-[64px] md:min-h-[80px] py-1 sm:py-2 md:py-3 overflow-x-auto text-base font-semibold text-[#6f5a66] md:justify-between w-full pl-2 pr-2 sm:pl-3 sm:pr-3 lg:pl-6 lg:pr-6">
+          {categories.map((category) => {
+            const isActive =
+              (category.slug && location.pathname === `/category/${category.slug}`) ||
+              (!category.slug && location.pathname === '/')
 
-              return (
-                <Link
-                  key={category.slug}
-                  to={category.slug ? `/category/${category.slug}` : '/'}
-                  className={`group whitespace-nowrap flex flex-col items-center gap-2 px-2 py-2 transition-colors ${
-                    isActive ? 'text-fk-blue' : 'text-[#6f5a66] hover:text-fk-blue'
+            return (
+              <Link
+                key={category.slug}
+                to={category.slug ? `/category/${category.slug}` : '/'}
+                className={`group whitespace-nowrap flex flex-col items-center gap-1 sm:gap-2 px-1 sm:px-2 py-1 sm:py-2 transition-colors ${
+                  isActive ? 'text-fk-blue' : 'text-[#6f5a66] hover:text-fk-blue'
+                }`}
+              >
+                <span
+                  className={`w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-lg sm:rounded-2xl flex items-center justify-center text-sm sm:text-lg md:text-xl transition-colors ${
+                    isActive
+                      ? 'bg-gradient-to-br from-fk-blue to-fk-teal text-white shadow-fk'
+                      : 'bg-white border border-fk-border text-fk-blue group-hover:border-fk-blue group-hover:bg-fk-bg group-hover:text-fk-blue'
                   }`}
                 >
-                  <span
-                    className={`w-10 h-10 md:w-11 md:h-11 rounded-2xl flex items-center justify-center text-lg md:text-xl transition-colors ${
-                      isActive
-                        ? 'bg-gradient-to-br from-fk-blue to-fk-teal text-white shadow-fk'
-                        : 'bg-white border border-fk-border text-fk-blue group-hover:border-fk-blue group-hover:bg-fk-bg group-hover:text-fk-blue'
-                    }`}
-                  >
-                    {category.icon}
-                  </span>
-                  <span className="text-xs md:text-sm font-semibold">{category.name}</span>
-                </Link>
-              )
-            })}
-            <Link
-              to="/products"
-              className="ml-auto whitespace-nowrap text-sm font-medium text-fk-blue hover:text-fk-teal transition-colors hidden md:inline"
-            >
-              View All
-            </Link>
-          </nav>
-        </div>
+                  {category.icon}
+                </span>
+                <span className="text-[10px] sm:text-xs md:text-sm font-semibold">{category.name}</span>
+              </Link>
+            )
+          })}
+          <Link
+            to="/products"
+            className="ml-auto whitespace-nowrap text-sm font-medium text-fk-blue hover:text-fk-teal transition-colors hidden md:inline"
+          >
+            View All
+          </Link>
+        </nav>
       </div>
-    </header>
+    </>
   )
 }
 

@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import {
   FaBox,
   FaCheck,
-  FaTruck,
-  FaShippingFast,
-  FaHome,
   FaChevronDown,
   FaChevronUp,
-  FaStar,
-  FaRegStar,
   FaExclamationTriangle,
+  FaHome,
+  FaRegStar,
+  FaShippingFast,
+  FaStar,
   FaTimesCircle,
+  FaTruck,
 } from 'react-icons/fa'
 import { cancelOrder, getUserOrders, submitProductRating } from '../firebase/services/orderService'
 import LoadingScreen from '../components/LoadingScreen'
@@ -47,6 +47,21 @@ function Orders() {
     loadOrders()
   }, [user?.uid])
 
+  const orderStats = useMemo(() => {
+    const totalSpend = orders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0)
+    const delivered = orders.filter((order) => order.status === 'delivered').length
+    const active = orders.filter(
+      (order) => order.status && !['delivered', 'cancelled'].includes(order.status)
+    ).length
+
+    return {
+      total: orders.length,
+      delivered,
+      active,
+      totalSpend,
+    }
+  }, [orders])
+
   const getStatusSteps = (status) => {
     const steps = [
       { key: 'confirmed', label: 'Order Confirmed', icon: FaCheck },
@@ -57,7 +72,11 @@ function Orders() {
     ]
     const statusOrder = ['confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered']
     const currentIndex = statusOrder.indexOf(status)
-    return steps.map((step, index) => ({ ...step, completed: index <= currentIndex, current: index === currentIndex }))
+    return steps.map((step, index) => ({
+      ...step,
+      completed: currentIndex >= 0 && index <= currentIndex,
+      current: index === currentIndex,
+    }))
   }
 
   const getStatusProgress = (status) => {
@@ -68,21 +87,25 @@ function Orders() {
     return Math.round((currentIndex / (statusOrder.length - 1)) * 100)
   }
 
-  const getStatusColor = (status) => {
-    if (status === 'confirmed') return 'bg-fk-blue text-white'
-    if (status === 'packed') return 'bg-fk-yellow text-white'
-    if (status === 'shipped') return 'bg-fk-teal text-white'
-    if (status === 'out_for_delivery') return 'bg-fk-yellow-dark text-white'
-    if (status === 'delivered') return 'bg-fk-blue-dark text-white'
-    if (status === 'cancelled') return 'bg-red-500 text-white'
-    return 'bg-gray-500 text-white'
+  const getStatusBadgeClass = (status) => {
+    if (status === 'confirmed') return 'border border-transparent text-white'
+    if (status === 'packed') return 'border border-[#f6dfb4] bg-[#fff8eb] text-[#9a6300]'
+    if (status === 'shipped') return 'border border-[#cce8de] bg-[#eefbf5] text-[#1d7a56]'
+    if (status === 'out_for_delivery') return 'border border-[#ffd7c7] bg-[#fff3ec] text-[#b55a2a]'
+    if (status === 'delivered') return 'border border-[#cde6d9] bg-[#effaf3] text-[#206847]'
+    if (status === 'cancelled') return 'border border-[#f5c2c7] bg-[#fff2f3] text-[#b42338]'
+    return 'border border-gray-200 bg-gray-100 text-gray-600'
   }
 
   const canCancelOrder = (status) => status === 'confirmed' || status === 'packed'
 
   const formatDate = (dateValue) => {
     if (!dateValue) return 'N/A'
-    return new Date(dateValue).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })
+    return new Date(dateValue).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
   }
 
   const toggleOrder = (orderId) => setExpandedOrder(expandedOrder === orderId ? null : orderId)
@@ -92,8 +115,8 @@ function Orders() {
     <div className="flex items-center">
       {[1, 2, 3, 4, 5].map((value) => (
         value <= rating
-          ? <FaStar key={value} className="text-fk-yellow text-sm" />
-          : <FaRegStar key={value} className="text-fk-yellow text-sm" />
+          ? <FaStar key={value} className="text-[#e2a400] text-sm" />
+          : <FaRegStar key={value} className="text-[#e2a400] text-sm" />
       ))}
     </div>
   )
@@ -164,235 +187,377 @@ function Orders() {
 
   if (orders.length === 0) {
     return (
-      <div className="bg-fk-bg min-h-screen py-8">
-        <div className="w-full px-0">
-          <div className="bg-white rounded shadow-fk p-8 text-center">
-            <FaBox className="text-6xl text-gray-300 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">No orders yet</h2>
-            <p className="text-gray-500 mb-6">You haven&apos;t placed any orders yet.</p>
-            <Link to="/products" className="inline-block bg-fk-blue text-white px-6 py-3 rounded font-medium hover:bg-fk-blue-dark transition-colors">
-              Start Shopping
-            </Link>
-          </div>
+      <div className="min-h-screen bg-[#f8fafc] py-6 sm:py-8">
+        <div className="mx-auto w-full max-w-5xl px-3 sm:px-4 lg:px-6">
+          <section className="overflow-hidden rounded-lg border border-[#e5ecf3] bg-white shadow-sm">
+            <div className="bg-[linear-gradient(135deg,#f2fbff_0%,#fff8ee_52%,#fdf2f6_100%)] px-5 py-10 text-center sm:px-8">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white text-[#245a90] shadow-sm">
+                <FaBox className="text-2xl" />
+              </div>
+              <h1 className="mt-5 text-2xl font-bold text-gray-900">No orders yet</h1>
+              <p className="mx-auto mt-2 max-w-xl text-sm text-gray-600 sm:text-base">
+                Your orders will appear here with live status, delivery progress, and billing details.
+              </p>
+              <Link
+                to="/products"
+                className="mt-6 inline-flex items-center justify-center rounded-lg bg-[#1f6fb2] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#195a90]"
+              >
+                Start Shopping
+              </Link>
+            </div>
+          </section>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-fk-bg min-h-screen py-4">
-      <div className="w-full px-0">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">My Orders</h1>
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <div
-              key={order.id}
-              className={`bg-white rounded shadow-fk overflow-hidden ${
-                cancelAnimatingId === order.id ? 'order-cancelled-flash' : ''
-              }`}
-            >
-              <div className="p-4 cursor-pointer hover:bg-gray-50" onClick={() => toggleOrder(order.id)}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-gray-800">Order #{order.id}</p>
-                    <p className="text-sm text-gray-500">Placed on {formatDate(order.orderedAt)}</p>
-                  </div>
-                  <div className="flex items-center gap-2 md:gap-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)} ${
-                        order.status === 'confirmed' ? 'order-status-confirmed' : ''
-                      } ${order.status === 'cancelled' ? 'order-status-cancelled' : ''}`}
-                    >
-                      {(order.status || 'unknown').replace(/_/g, ' ')}
-                    </span>
-                    {canCancelOrder(order.status) && (
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          requestCancelOrder(order.id)
-                        }}
-                        disabled={cancellingOrderId === order.id}
-                        className="text-xs md:text-sm px-3 py-1 rounded border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-60 flex items-center gap-1"
-                      >
-                        <FaTimesCircle />
-                        {cancellingOrderId === order.id ? 'Cancelling...' : 'Cancel Order'}
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        toggleOrder(order.id)
-                      }}
-                      className="text-xs md:text-sm px-3 py-1 rounded border border-fk-blue text-fk-blue hover:bg-fk-bg transition-colors"
-                    >
-                      {expandedOrder === order.id ? 'Hide Details' : 'View Details'}
-                    </button>
-                    {expandedOrder === order.id ? <FaChevronUp /> : <FaChevronDown />}
-                  </div>
-                </div>
+    <div className="min-h-screen bg-[#f8fafc] py-4 sm:py-6">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-3 sm:px-4 lg:px-6">
+        <section className="overflow-hidden rounded-lg border border-[#e5ecf3] bg-white shadow-sm">
+          <div className="bg-[linear-gradient(135deg,#f2fbff_0%,#fff7ee_52%,#fdf2f6_100%)] p-5 sm:p-6">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#2a6ca8]">Order Dashboard</p>
+                <h1 className="mt-2 text-2xl font-bold text-gray-900 sm:text-3xl">My Orders</h1>
+                <p className="mt-2 text-sm text-gray-600 sm:text-base">
+                  Track every order, manage delivery status, review delivered products, and check billing details without hunting through long lists.
+                </p>
               </div>
 
-              {confirmingCancelId === order.id && (
-                <div className="border-t border-red-100 bg-red-50 px-4 py-3 flex flex-wrap items-center justify-between gap-3 order-cancel-confirm">
-                  <div className="flex items-center gap-2 text-red-700 text-sm">
-                    <FaExclamationTriangle className="text-red-500" />
-                    <span>Are you sure you want to cancel this order?</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        handleCancelOrder(order.id)
-                      }}
-                      disabled={cancellingOrderId === order.id}
-                      className="text-xs md:text-sm px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
-                    >
-                      Yes, cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        closeCancelPrompt()
-                      }}
-                      className="text-xs md:text-sm px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-100"
-                    >
-                      Keep order
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {expandedOrder === order.id && (
-                <div className="border-t border-gray-200 p-4">
-                  {order.status !== 'cancelled' && (
-                    <div className="mb-6">
-                      <h3 className="font-bold text-gray-800 mb-3">Order Status</h3>
-                      <div className="order-steps-scroll overflow-x-auto pb-2">
-                        <div className="order-steps-track relative min-w-[520px]">
-                          <div className="order-steps-line" />
-                          <div
-                            className="order-steps-progress order-progress-bar"
-                            style={{ width: `${getStatusProgress(order.status)}%` }}
-                          />
-                          <div className="relative z-10 flex items-start justify-between gap-4">
-                            {getStatusSteps(order.status).map((step) => (
-                              <div key={step.key} className="flex flex-col items-center flex-1 min-w-[90px]">
-                                <div
-                                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                    step.completed ? 'bg-fk-yellow text-white' : 'bg-gray-200 text-gray-400'
-                                  } ${order.status === 'confirmed' && step.key === 'confirmed' ? 'order-step-confirmed' : ''}`}
-                                >
-                                  <step.icon />
-                                </div>
-                                <p className={`text-xs mt-2 text-center ${step.current ? 'font-bold text-fk-blue' : 'text-gray-500'}`}>{step.label}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="mb-4">
-                    <h3 className="font-bold text-gray-800 mb-3">Items</h3>
-                    <div className="space-y-3">
-                      {(order.items || []).map((item, index) => (
-                        <div key={`${order.id}-${index}`} className="flex gap-4">
-                          <img src={item.image} alt={item.title} className="w-16 h-16 object-contain" />
-                          <div className="flex-1">
-                            <p className="font-medium">{item.title}</p>
-                            <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
-                            {order.status === 'delivered' && (
-                              <div className="mt-2">
-                                {order.itemRatings?.[item.id]?.rating ? (
-                                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <span>Your rating:</span>
-                                    {renderStars(order.itemRatings[item.id].rating)}
-                                  </div>
-                                ) : (
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <div className="flex items-center gap-1">
-                                      {[1, 2, 3, 4, 5].map((value) => {
-                                        const key = getRatingKey(order.id, item.id)
-                                        const selected = ratingDrafts[key] || 0
-                                        return (
-                                          <button
-                                            key={value}
-                                            type="button"
-                                            onClick={() => handleRatingSelect(order.id, item.id, value)}
-                                            className="text-fk-yellow hover:scale-105 transition-transform"
-                                            aria-label={`Rate ${value} star`}
-                                          >
-                                            {value <= selected ? <FaStar /> : <FaRegStar />}
-                                          </button>
-                                        )
-                                      })}
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleSubmitRating(order.id, item.id)}
-                                      disabled={!ratingDrafts[getRatingKey(order.id, item.id)] || ratingSubmitting === getRatingKey(order.id, item.id)}
-                                      className="text-xs px-3 py-1 rounded bg-fk-blue text-white hover:bg-fk-blue-dark disabled:opacity-60"
-                                    >
-                                      {ratingSubmitting === getRatingKey(order.id, item.id) ? 'Submitting...' : 'Submit'}
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          <p className="font-bold">{formatCurrency(item.price)}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="border-t border-gray-200 pt-4">
-                    <div className="flex justify-between mb-2">
-                      <span className="text-gray-600">Payment Method</span>
-                      <span className="font-medium">{order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}</span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-gray-600">Delivery Address</span>
-                      <span className="font-medium text-right">
-                        {order.shippingAddress?.name}, {order.shippingAddress?.street}, {order.shippingAddress?.city}, {order.shippingAddress?.pincode}
-                      </span>
-                    </div>
-                    {order.couponCode ? (
-                      <div className="flex justify-between mb-2">
-                        <span className="text-gray-600">Coupon</span>
-                        <span className="font-medium">{order.couponCode}</span>
-                      </div>
-                    ) : null}
-                    <div className="flex justify-between mb-2">
-                      <span className="text-gray-600">Subtotal</span>
-                      <span className="font-medium">{formatCurrency(order.subtotal || order.totalAmount)}</span>
-                    </div>
-                    {Number(order.discountAmount || 0) > 0 ? (
-                      <div className="flex justify-between mb-2">
-                        <span className="text-gray-600">Discount</span>
-                        <span className="font-medium text-fk-teal">-{formatCurrency(order.discountAmount)}</span>
-                      </div>
-                    ) : null}
-                    <div className="flex justify-between mb-2">
-                      <span className="text-gray-600">Delivery</span>
-                      <span className="font-medium">
-                        {Number(order.deliveryCharge || 0) > 0 ? formatCurrency(order.deliveryCharge) : 'FREE'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg pt-2 border-t">
-                      <span>Total</span>
-                      <span>{formatCurrency(order.totalAmount)}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <Link
+                to="/products"
+                className="inline-flex items-center justify-center rounded-lg border border-[#d5dfeb] bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-[#f8fafc]"
+              >
+                Continue Shopping
+              </Link>
             </div>
-          ))}
+
+            <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <div className="rounded-lg border border-[#deebf6] bg-white/90 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-500">Total Orders</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">{orderStats.total}</p>
+              </div>
+              <div className="rounded-lg border border-[#deebf6] bg-white/90 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-500">Active</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">{orderStats.active}</p>
+              </div>
+              <div className="rounded-lg border border-[#deebf6] bg-white/90 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-500">Delivered</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">{orderStats.delivered}</p>
+              </div>
+              <div className="rounded-lg border border-[#deebf6] bg-white/90 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-500">Total Spend</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">{formatCurrency(orderStats.totalSpend)}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="space-y-4">
+          {orders.map((order) => {
+            const expanded = expandedOrder === order.id
+            const orderItems = Array.isArray(order.items) ? order.items : []
+            const statusLabel = (order.status || 'unknown').replace(/_/g, ' ')
+
+            return (
+              <article
+                key={order.id}
+                className={`overflow-hidden rounded-lg border border-[#e5ecf3] bg-white shadow-sm ${
+                  cancelAnimatingId === order.id ? 'order-cancelled-flash' : ''
+                }`}
+              >
+                <div className="p-4 sm:p-5">
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-lg border border-[#d6e3ef] bg-[#f8fbff] px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#245a90]">
+                          Order #{order.id}
+                        </span>
+                        <span
+                          className={`${getStatusBadgeClass(order.status)} ${
+                            order.status === 'confirmed' ? 'order-status-confirmed' : ''
+                          } ${order.status === 'cancelled' ? 'order-status-cancelled' : ''} rounded-lg px-3 py-1 text-xs font-semibold capitalize`}
+                        >
+                          {statusLabel}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-400">Placed On</p>
+                          <p className="mt-1 text-sm font-medium text-gray-800">{formatDate(order.orderedAt)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-400">Items</p>
+                          <p className="mt-1 text-sm font-medium text-gray-800">{orderItems.length} product{orderItems.length === 1 ? '' : 's'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-400">Payment</p>
+                          <p className="mt-1 text-sm font-medium text-gray-800">
+                            {order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3 xl:min-w-[230px] xl:items-end">
+                      <div className="xl:text-right">
+                        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-400">Order Total</p>
+                        <p className="mt-1 text-2xl font-bold text-gray-900">{formatCurrency(order.totalAmount)}</p>
+                      </div>
+
+                      <div className="flex flex-col gap-2 sm:flex-row xl:w-full xl:flex-col">
+                        {canCancelOrder(order.status) ? (
+                          <button
+                            type="button"
+                            onClick={() => requestCancelOrder(order.id)}
+                            disabled={cancellingOrderId === order.id}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#f2c3c8] bg-[#fff4f5] px-4 py-2.5 text-sm font-semibold text-[#b42338] transition hover:bg-[#ffecee] disabled:opacity-60"
+                          >
+                            <FaTimesCircle />
+                            {cancellingOrderId === order.id ? 'Cancelling...' : 'Cancel Order'}
+                          </button>
+                        ) : null}
+
+                        <button
+                          type="button"
+                          onClick={() => toggleOrder(order.id)}
+                          className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1f6fb2] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#195a90]"
+                        >
+                          {expanded ? 'Hide Details' : 'View Details'}
+                          {expanded ? <FaChevronUp className="text-xs" /> : <FaChevronDown className="text-xs" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {confirmingCancelId === order.id ? (
+                    <div className="order-cancel-confirm mt-4 rounded-lg border border-[#f5c2c7] bg-[#fff4f5] p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-2 text-sm text-[#b42338]">
+                          <FaExclamationTriangle className="mt-0.5 flex-shrink-0" />
+                          <span>Are you sure you want to cancel this order?</span>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleCancelOrder(order.id)}
+                            disabled={cancellingOrderId === order.id}
+                            className="rounded-lg bg-[#c63d4f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#aa3040] disabled:opacity-60"
+                          >
+                            Yes, cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={closeCancelPrompt}
+                            className="rounded-lg border border-[#d7dfe9] bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-[#f8fafc]"
+                          >
+                            Keep Order
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
+                {expanded ? (
+                  <div className="border-t border-[#e8edf4] bg-[#fbfdff] p-4 sm:p-5">
+                    {order.status !== 'cancelled' ? (
+                      <section>
+                        <div className="mb-3 flex items-center justify-between gap-3">
+                          <div>
+                            <h2 className="text-base font-bold text-gray-900">Delivery Progress</h2>
+                            <p className="text-sm text-gray-500">Live order movement from confirmation to delivery.</p>
+                          </div>
+                          <p className="text-sm font-semibold text-[#245a90]">{getStatusProgress(order.status)}%</p>
+                        </div>
+
+                        <div className="order-steps-scroll overflow-x-auto pb-2">
+                          <div className="order-steps-track relative min-w-[560px]">
+                            <div className="order-steps-line" />
+                            <div
+                              className="order-steps-progress order-progress-bar"
+                              style={{ width: `${getStatusProgress(order.status)}%` }}
+                            />
+                            <div className="relative z-10 flex items-start justify-between gap-4">
+                              {getStatusSteps(order.status).map((step) => (
+                                <div key={step.key} className="flex min-w-[96px] flex-1 flex-col items-center">
+                                  <div
+                                    className={`flex h-11 w-11 items-center justify-center rounded-full border text-sm ${
+                                      step.completed
+                                        ? 'border-[#1f6fb2] bg-[#1f6fb2] text-white'
+                                        : 'border-[#d8e1ec] bg-white text-gray-400'
+                                    } ${order.status === 'confirmed' && step.key === 'confirmed' ? 'order-step-confirmed' : ''}`}
+                                  >
+                                    <step.icon />
+                                  </div>
+                                  <p className={`mt-2 text-center text-xs ${step.current ? 'font-semibold text-[#245a90]' : 'text-gray-500'}`}>
+                                    {step.label}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </section>
+                    ) : null}
+
+                    <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(300px,1fr)]">
+                      <section>
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <h2 className="text-base font-bold text-gray-900">Items</h2>
+                            <p className="text-sm text-gray-500">Products included in this order.</p>
+                          </div>
+                          <p className="text-sm font-medium text-gray-500">{orderItems.length} item{orderItems.length === 1 ? '' : 's'}</p>
+                        </div>
+
+                        <div className="mt-4 space-y-3">
+                          {orderItems.map((item, index) => {
+                            const itemKey = getRatingKey(order.id, item.id)
+                            const lineTotal = Number(item.price || 0) * Number(item.quantity || 1)
+
+                            return (
+                              <div key={`${order.id}-${index}`} className="rounded-lg border border-[#e5ecf3] bg-white p-3 sm:p-4">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                  <div className="flex items-start gap-3">
+                                    {item.image ? (
+                                      <img src={item.image} alt={item.title} className="h-20 w-20 rounded-lg object-contain bg-white" />
+                                    ) : (
+                                      <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-gray-100 text-xs text-gray-400">
+                                        No image
+                                      </div>
+                                    )}
+
+                                    <div className="min-w-0">
+                                      <p className="font-semibold text-gray-900">{item.title}</p>
+                                      <p className="mt-1 text-sm text-gray-500">Qty: {item.quantity}</p>
+                                      <p className="mt-1 text-sm text-gray-500">Unit price: {formatCurrency(item.price)}</p>
+                                    </div>
+                                  </div>
+
+                                  <div className="sm:text-right">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-400">Line Total</p>
+                                    <p className="mt-1 text-base font-semibold text-gray-900">{formatCurrency(lineTotal)}</p>
+                                  </div>
+                                </div>
+
+                                {order.status === 'delivered' ? (
+                                  <div className="mt-4 border-t border-[#edf1f5] pt-4">
+                                    {order.itemRatings?.[item.id]?.rating ? (
+                                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                        <span className="text-sm text-gray-600">Your rating</span>
+                                        {renderStars(order.itemRatings[item.id].rating)}
+                                      </div>
+                                    ) : (
+                                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                        <div className="flex items-center gap-1">
+                                          {[1, 2, 3, 4, 5].map((value) => {
+                                            const selected = ratingDrafts[itemKey] || 0
+                                            return (
+                                              <button
+                                                key={value}
+                                                type="button"
+                                                onClick={() => handleRatingSelect(order.id, item.id, value)}
+                                                className="text-[#e2a400] transition hover:scale-105"
+                                                aria-label={`Rate ${value} star`}
+                                              >
+                                                {value <= selected ? <FaStar /> : <FaRegStar />}
+                                              </button>
+                                            )
+                                          })}
+                                        </div>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSubmitRating(order.id, item.id)}
+                                          disabled={!ratingDrafts[itemKey] || ratingSubmitting === itemKey}
+                                          className="rounded-lg bg-[#1f6fb2] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#195a90] disabled:opacity-60"
+                                        >
+                                          {ratingSubmitting === itemKey ? 'Submitting...' : 'Submit Rating'}
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : null}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </section>
+
+                      <div className="space-y-5 border-t border-[#e8edf4] pt-5 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
+                        <section className="space-y-3">
+                          <div>
+                            <h2 className="text-base font-bold text-gray-900">Delivery Details</h2>
+                            <p className="text-sm text-gray-500">Where this order is being sent.</p>
+                          </div>
+
+                          <div className="space-y-2 text-sm text-gray-700">
+                            <p className="font-semibold text-gray-900">{order.shippingAddress?.name || 'Customer'}</p>
+                            <p>{order.shippingAddress?.street || 'Address not available'}</p>
+                            <p>
+                              {order.shippingAddress?.city || 'City'}, {order.shippingAddress?.state || 'State'} {order.shippingAddress?.pincode || ''}
+                            </p>
+                            {order.shippingAddress?.phone ? <p>Phone: {order.shippingAddress.phone}</p> : null}
+                          </div>
+                        </section>
+
+                        <section className="space-y-3 border-t border-[#e8edf4] pt-5">
+                          <div>
+                            <h2 className="text-base font-bold text-gray-900">Payment Summary</h2>
+                            <p className="text-sm text-gray-500">Billing and payment details for this order.</p>
+                          </div>
+
+                          <div className="space-y-3 text-sm">
+                            <div className="flex items-center justify-between gap-4">
+                              <span className="text-gray-500">Payment Method</span>
+                              <span className="font-medium text-gray-900">
+                                {order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}
+                              </span>
+                            </div>
+
+                            {order.couponCode ? (
+                              <div className="flex items-center justify-between gap-4">
+                                <span className="text-gray-500">Coupon</span>
+                                <span className="font-medium text-gray-900">{order.couponCode}</span>
+                              </div>
+                            ) : null}
+
+                            <div className="flex items-center justify-between gap-4">
+                              <span className="text-gray-500">Subtotal</span>
+                              <span className="font-medium text-gray-900">{formatCurrency(order.subtotal || order.totalAmount)}</span>
+                            </div>
+
+                            {Number(order.discountAmount || 0) > 0 ? (
+                              <div className="flex items-center justify-between gap-4">
+                                <span className="text-gray-500">Discount</span>
+                                <span className="font-medium text-[#1a7a52]">-{formatCurrency(order.discountAmount)}</span>
+                              </div>
+                            ) : null}
+
+                            <div className="flex items-center justify-between gap-4">
+                              <span className="text-gray-500">Delivery Charge</span>
+                              <span className="font-medium text-gray-900">
+                                {Number(order.deliveryCharge || 0) > 0 ? formatCurrency(order.deliveryCharge) : 'FREE'}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-4 border-t border-[#e8edf4] pt-3 text-base">
+                              <span className="font-semibold text-gray-900">Total</span>
+                              <span className="font-bold text-gray-900">{formatCurrency(order.totalAmount)}</span>
+                            </div>
+                          </div>
+                        </section>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+              </article>
+            )
+          })}
         </div>
       </div>
     </div>
@@ -400,6 +565,3 @@ function Orders() {
 }
 
 export default Orders
-
-
-

@@ -7,7 +7,6 @@ import ProductCard from '../components/ProductCard'
 import { getAllProducts } from '../services/productService'
 import { getActiveBanners } from '../services/bannerService'
 import { useAppLoad } from '../context/AppLoadContext'
-import { STORE_INFO } from '../data/storeInfo'
 
 import 'swiper/css'
 import 'swiper/css/navigation'
@@ -64,7 +63,13 @@ function Home() {
   const featuredProducts = products
     .filter((product) => product.isFeatured && Number(product.stock || 0) > 0)
     .slice(0, topDealsLimit)
-  const laptops = products.filter((product) => product.category === 'laptops').slice(0, bestSellingLimit)
+  const laptopProducts = products.filter(
+    (product) => product.category === 'laptops' && Number(product.stock || 0) > 0
+  )
+  const laptops = [
+    ...laptopProducts.filter((product) => product.showInBestSelling),
+    ...laptopProducts.filter((product) => !product.showInBestSelling),
+  ].slice(0, bestSellingLimit)
   const newArrivals = [...products]
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
     .slice(0, newArrivalsLimit)
@@ -178,7 +183,7 @@ function Home() {
       </div>
 
       <div className="px-0 py-6">
-        <div className="w-full bg-gradient-to-r from-[#9fd8ff] via-[#d7a9ff] to-[#ff9bc5] border border-fk-border rounded-3xl shadow-fk p-3 sm:p-5">
+        <div className="w-full bg-gradient-to-r from-[#dcefff] via-[#eed8ff] to-[#ffdbe9] border border-fk-border rounded-3xl shadow-fk p-3 sm:p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-[#24161f]">Top Deals</h2>
             <Link to="/products" className="text-fk-blue text-sm font-medium flex items-center gap-1 hover:underline">
@@ -203,34 +208,36 @@ function Home() {
         </div>
       </div>
 
-      <div className="w-full px-0 py-2">
-        <div className="flex items-center justify-between mb-4 pl-3 sm:pl-4 lg:pl-6">
-          <h2 className="text-xl font-bold text-[#24161f]">Best Selling Laptops</h2>
-          <Link
-            to="/category/laptops"
-            className="text-fk-blue text-sm font-medium flex items-center gap-1 hover:underline"
-          >
-            View All <FaChevronRight />
-          </Link>
-        </div>
-        <div className="flex gap-4 overflow-x-auto pb-2 pr-1">
-          {loading ? (
-            [...Array(bestSellingLimit)].map((_, index) => (
-              <div key={index} className={`${laptopRowCardClass} bg-white rounded h-64 animate-pulse`}>
-                <div className="h-48 bg-gray-200 m-4 rounded" />
-                <div className="h-4 bg-gray-200 mx-4 mb-2 rounded" />
-                <div className="h-4 bg-gray-200 mx-4 w-2/3 rounded" />
-              </div>
-            ))
-          ) : laptops.length > 0 ? (
-            laptops.map((product) => (
-              <div key={product.id} className={laptopRowCardClass}>
-                <ProductCard product={product} />
-              </div>
-            ))
-          ) : (
-            <div className="min-w-full text-center py-8 text-gray-500">No laptop products found.</div>
-          )}
+      <div className="w-full px-0 py-6">
+        <div className="bg-gradient-to-r from-[#dcfff1] via-[#fff4b3] to-[#ffd8cf] border border-fk-border rounded-3xl shadow-fk p-4 sm:p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-[#24161f]">Best Selling Laptops</h2>
+            <Link
+              to="/category/laptops"
+              className="text-fk-blue text-sm font-medium flex items-center gap-1 hover:underline"
+            >
+              View All <FaChevronRight />
+            </Link>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-2 pr-1">
+            {loading ? (
+              [...Array(bestSellingLimit)].map((_, index) => (
+                <div key={index} className={`${laptopRowCardClass} bg-white rounded h-64 animate-pulse`}>
+                  <div className="h-48 bg-gray-200 m-4 rounded" />
+                  <div className="h-4 bg-gray-200 mx-4 mb-2 rounded" />
+                  <div className="h-4 bg-gray-200 mx-4 w-2/3 rounded" />
+                </div>
+              ))
+            ) : laptops.length > 0 ? (
+              laptops.map((product) => (
+                <div key={product.id} className={laptopRowCardClass}>
+                  <ProductCard product={product} />
+                </div>
+              ))
+            ) : (
+              <div className="min-w-full text-center py-8 text-gray-500">No laptop products found.</div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -276,29 +283,6 @@ function Home() {
               ))}
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="w-full px-0 py-8">
-        <div className="bg-white border border-fk-border rounded-2xl shadow-fk px-4 py-8 text-center">
-          <img
-            src={STORE_INFO.logo}
-            alt={STORE_INFO.name}
-            className="h-24 sm:h-28 w-auto max-w-full mx-auto object-contain mb-4"
-          />
-          <h2 className="text-2xl font-bold text-[#24161f] mb-2">{STORE_INFO.heroTitle}</h2>
-          <p className="text-[#6f5a66] mb-4">{STORE_INFO.heroText}</p>
-          <div className="flex flex-wrap justify-center gap-2 mb-4">
-            {STORE_INFO.services.map((service) => (
-              <span
-                key={service}
-                className="rounded-full border border-fk-border bg-fk-bg px-3 py-1 text-xs font-semibold text-[#6f5a66]"
-              >
-                {service}
-              </span>
-            ))}
-          </div>
-          <p className="text-sm text-[#8d6476]">Sales and Service | Wholesale and Retail | {STORE_INFO.location}</p>
         </div>
       </div>
     </div>

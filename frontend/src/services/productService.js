@@ -9,6 +9,8 @@ const normalizeProduct = (product) => {
     highlights: Array.isArray(product.highlights) ? product.highlights : [],
     specs: product.specs && typeof product.specs === 'object' ? product.specs : {},
     sku: product.sku || '',
+    isFeatured: Boolean(product.isFeatured),
+    showInBestSelling: Boolean(product.showInBestSelling),
   }
 }
 

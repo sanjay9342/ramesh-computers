@@ -23,6 +23,7 @@ import Policies from './pages/Policies'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminProducts from './pages/admin/Products'
 import AdminOrders from './pages/admin/Orders'
+import AdminPlaceOrder from './pages/admin/PlaceOrder'
 import AdminCoupons from './pages/admin/Coupons'
 import AdminCustomers from './pages/admin/Customers'
 
@@ -126,6 +127,7 @@ function App() {
         <Route index element={<AdminDashboard />} />
         <Route path="products" element={<AdminProducts />} />
         <Route path="orders" element={<AdminOrders />} />
+        <Route path="place-order" element={<AdminPlaceOrder />} />
         <Route path="coupons" element={<AdminCoupons />} />
         <Route path="customers" element={<AdminCustomers />} />
       </Route>

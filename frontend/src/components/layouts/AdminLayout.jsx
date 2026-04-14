@@ -8,6 +8,7 @@ import {
   FaTags,
   FaShoppingCart,
   FaSignOutAlt,
+  FaStore,
   FaTachometerAlt,
   FaTimes,
   FaUsers,
@@ -35,7 +36,14 @@ const saveSeenOrderIds = (ids) => {
 }
 
 function AdminLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return window.innerWidth >= 1024
+  })
+  const [isDesktopSidebar, setIsDesktopSidebar] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return window.innerWidth >= 1024
+  })
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [confirmedOrders, setConfirmedOrders] = useState([])
   const [seenOrderIds, setSeenOrderIds] = useState(getSeenOrderIds)
@@ -50,6 +58,7 @@ function AdminLayout() {
     { path: '/admin', icon: <FaTachometerAlt />, label: 'Dashboard' },
     { path: '/admin/products', icon: <FaBox />, label: 'Catalog + Slider' },
     { path: '/admin/orders', icon: <FaShoppingCart />, label: 'Orders' },
+    { path: '/admin/place-order', icon: <FaStore />, label: 'Place Order' },
     { path: '/admin/coupons', icon: <FaTags />, label: 'Coupons' },
     { path: '/admin/customers', icon: <FaUsers />, label: 'Customers' },
   ]
@@ -97,6 +106,30 @@ function AdminLayout() {
   }, [])
 
   useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+
+    let previousDesktopState = window.innerWidth >= 1024
+    const handleResize = () => {
+      const nextDesktopState = window.innerWidth >= 1024
+      setIsDesktopSidebar(nextDesktopState)
+      if (nextDesktopState !== previousDesktopState) {
+        setSidebarOpen(nextDesktopState)
+        previousDesktopState = nextDesktopState
+      }
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    if (!isDesktopSidebar) {
+      setSidebarOpen(false)
+    }
+  }, [isDesktopSidebar, location.pathname])
+
+  useEffect(() => {
     const onClickOutside = (event) => {
       if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
         setNotificationsOpen(false)
@@ -127,24 +160,24 @@ function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-[#fff8fa]">
-      <div className="bg-gradient-to-r from-fk-blue via-fk-yellow to-fk-blue-dark text-white h-16 flex items-center justify-between px-4 fixed w-full top-0 z-50 shadow-fk">
+      <div className="bg-gradient-to-r from-fk-blue via-fk-yellow to-fk-blue-dark text-white h-16 flex items-center justify-between px-3 sm:px-4 fixed w-full top-0 z-50 shadow-fk">
         <div className="flex items-center gap-4">
           <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-white hover:text-fk-teal transition-colors">
             {sidebarOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
           </button>
-          <Link to="/" className="flex items-center gap-3 ml-2">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 min-w-0">
             <img
               src={STORE_INFO.logo}
               alt={STORE_INFO.name}
-              className="h-12 w-auto max-w-[190px] object-contain"
+              className="h-10 sm:h-12 w-auto max-w-[132px] sm:max-w-[190px] object-contain"
             />
-            <span className="bg-white/15 text-white text-xs font-semibold px-2 py-1 rounded border border-white/20">
+            <span className="hidden sm:inline-flex bg-white/15 text-white text-xs font-semibold px-2 py-1 rounded border border-white/20">
               Admin
             </span>
           </Link>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <div className="relative" ref={notificationsRef}>
             <button
               onClick={() => setNotificationsOpen((prev) => !prev)}
@@ -160,7 +193,7 @@ function AdminLayout() {
             </button>
 
             {notificationsOpen && (
-              <div className="absolute right-0 mt-3 w-80 bg-white text-gray-800 rounded-lg shadow-fk overflow-hidden border border-fk-border">
+              <div className="absolute right-0 mt-3 w-[min(20rem,calc(100vw-1.5rem))] bg-white text-gray-800 rounded-lg shadow-fk overflow-hidden border border-fk-border">
                 <div className="px-4 py-3 border-b border-fk-border bg-fk-bg flex items-center justify-between">
                   <p className="font-semibold">New Confirmed Orders</p>
                   <button
@@ -195,17 +228,27 @@ function AdminLayout() {
 
           <button onClick={handleLogout} className="flex items-center gap-2 hover:text-fk-teal transition-colors">
             <FaSignOutAlt />
-            <span className="hidden md:inline">Logout</span>
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </div>
 
+      {sidebarOpen && !isDesktopSidebar ? (
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 top-16 bg-black/35 z-30 lg:hidden"
+        />
+      ) : null}
+
       <div
-        className={`fixed left-0 top-16 h-screen bg-white border-r border-fk-border shadow-fk transition-all duration-300 z-40 ${
-          sidebarOpen ? 'w-64' : 'w-0 -translate-x-full'
+        className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white border-r border-fk-border shadow-fk transition-transform duration-300 z-40 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } ${isDesktopSidebar ? 'w-64' : 'w-[280px] max-w-[84vw]'
         }`}
       >
-        <nav className="py-4">
+        <nav className="py-4 overflow-y-auto h-full">
           {menuItems.map((item) => {
             const isActive = item.path === '/admin'
               ? location.pathname === '/admin'
@@ -229,8 +272,8 @@ function AdminLayout() {
         </nav>
       </div>
 
-      <div className={`pt-16 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
-        <div className="p-6">
+      <div className={`pt-16 transition-all duration-300 ${sidebarOpen && isDesktopSidebar ? 'lg:ml-64' : 'ml-0'}`}>
+        <div className="p-3 sm:p-4 lg:p-6">
           <AnimatePresence mode="wait">
             <PageTransition routeKey={`${location.pathname}${location.search}`}>
               <Outlet />

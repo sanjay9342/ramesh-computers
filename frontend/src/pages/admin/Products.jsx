@@ -38,6 +38,7 @@ const initialProductForm = {
   image: '',
   images: [],
   isFeatured: false,
+  showInBestSelling: false,
 }
 
 const initialBannerForm = {
@@ -111,11 +112,13 @@ function AdminProducts() {
   )
 
   const productStats = useMemo(() => {
-    const featured = products.filter((product) => product.isFeatured).length
+    const topDeals = products.filter((product) => product.isFeatured).length
+    const bestSelling = products.filter((product) => product.showInBestSelling).length
     const lowStock = products.filter((product) => Number(product.stock || 0) <= 5).length
     return {
       total: products.length,
-      featured,
+      topDeals,
+      bestSelling,
       lowStock,
     }
   }, [products])
@@ -139,10 +142,19 @@ function AdminProducts() {
 
   const handleProductInputChange = (event) => {
     const { name, value, type, checked } = event.target
-    setProductForm((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }))
+    setProductForm((prev) => {
+      const nextValue = type === 'checkbox' ? checked : value
+      const nextState = {
+        ...prev,
+        [name]: nextValue,
+      }
+
+      if (name === 'category' && value !== 'laptops') {
+        nextState.showInBestSelling = false
+      }
+
+      return nextState
+    })
   }
 
   const handleBannerInputChange = (event) => {
@@ -214,6 +226,7 @@ function AdminProducts() {
 
   const submitProduct = async (event) => {
     event.preventDefault()
+    const normalizedCategory = productForm.category.trim().toLowerCase()
     const normalizedOffers = (productForm.availableOffers || '')
       .split('\n')
       .map((offer) => offer.trim())
@@ -230,7 +243,7 @@ function AdminProducts() {
     const payload = {
       title: productForm.title.trim(),
       sku: productForm.sku.trim().toUpperCase(),
-      category: productForm.category.trim().toLowerCase(),
+      category: normalizedCategory,
       brand: productForm.brand.trim(),
       price: Number(productForm.price),
       discountPrice: productForm.discountPrice ? Number(productForm.discountPrice) : null,
@@ -248,6 +261,7 @@ function AdminProducts() {
       images: (productForm.images || []).slice(0, MAX_PRODUCT_IMAGES),
       image: (productForm.images || [])[0] || productForm.image || '',
       isFeatured: Boolean(productForm.isFeatured),
+      showInBestSelling: normalizedCategory === 'laptops' && Boolean(productForm.showInBestSelling),
     }
 
     try {
@@ -321,9 +335,12 @@ function AdminProducts() {
       image: images[0] || '',
       images: images.slice(0, MAX_PRODUCT_IMAGES),
       isFeatured: Boolean(product.isFeatured),
+      showInBestSelling: Boolean(product.showInBestSelling),
     })
     setShowProductModal(true)
   }
+
+  const isLaptopSelection = productForm.category === 'laptops'
 
   const openEditBanner = (banner) => {
     setEditingBanner(banner)
@@ -394,7 +411,7 @@ function AdminProducts() {
 
   return (
     <div className="space-y-8">
-      <section className="bg-white rounded-lg shadow p-6">
+      <section className="bg-white rounded-lg shadow p-4 sm:p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Product Control Center</h1>
@@ -412,14 +429,18 @@ function AdminProducts() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-6">
           <div className="rounded-lg border border-gray-200 p-4">
             <p className="text-sm text-gray-500">Total Products</p>
             <p className="text-2xl font-bold text-gray-800">{productStats.total}</p>
           </div>
           <div className="rounded-lg border border-gray-200 p-4">
-            <p className="text-sm text-gray-500">Featured Products</p>
-            <p className="text-2xl font-bold text-gray-800">{productStats.featured}</p>
+            <p className="text-sm text-gray-500">Top Deals</p>
+            <p className="text-2xl font-bold text-gray-800">{productStats.topDeals}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 p-4">
+            <p className="text-sm text-gray-500">Best Selling Laptops</p>
+            <p className="text-2xl font-bold text-gray-800">{productStats.bestSelling}</p>
           </div>
           <div className="rounded-lg border border-gray-200 p-4">
             <p className="text-sm text-gray-500">Low Stock (&lt;= 5)</p>
@@ -441,71 +462,178 @@ function AdminProducts() {
         </div>
       </section>
 
-      <section className="bg-white rounded-lg shadow overflow-x-auto">
+      <section className="bg-white rounded-lg shadow overflow-hidden">
         {loadingProducts ? (
           <div className="p-8 text-center text-gray-500">Loading products...</div>
         ) : filteredProducts.length === 0 ? (
           <div className="p-8 text-center text-gray-500">No products found.</div>
         ) : (
-          <table className="w-full min-w-[900px]">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Image</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Product</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Category</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Brand</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Price</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Stock</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Featured</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            <div className="divide-y divide-gray-100 md:hidden">
               {filteredProducts.map((product) => (
-                <tr key={product.id} className="border-t hover:bg-gray-50">
-                  <td className="py-3 px-4">
+                <article key={product.id} className="p-4 space-y-4">
+                  <div className="flex items-start gap-3">
                     {(product.image || product.images?.[0]) ? (
-                      <div className="space-y-1">
-                        <img
-                          src={product.image || product.images?.[0]}
-                          alt={product.title}
-                          className="w-16 h-16 object-cover rounded"
-                        />
-                        {Array.isArray(product.images) && product.images.length > 1 && (
-                          <span className="text-xs text-gray-500">{product.images.length} images</span>
-                        )}
-                      </div>
+                      <img
+                        src={product.image || product.images?.[0]}
+                        alt={product.title}
+                        className="w-20 h-20 object-cover rounded-lg"
+                      />
                     ) : (
-                      <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
+                      <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center text-xs text-gray-500">
                         No image
                       </div>
                     )}
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="font-medium">{product.title}</div>
-                    {product.sku ? <div className="text-xs text-gray-500">{product.sku}</div> : null}
-                  </td>
-                  <td className="py-3 px-4 capitalize">{product.category}</td>
-                  <td className="py-3 px-4">{product.brand}</td>
-                  <td className="py-3 px-4">
-                    Rs. {Number(product.discountPrice || product.price || 0).toLocaleString()}
-                  </td>
-                  <td className="py-3 px-4">{product.stock}</td>
-                  <td className="py-3 px-4">{product.isFeatured ? 'Yes' : 'No'}</td>
-                  <td className="py-3 px-4">
-                    <div className="flex gap-2">
-                      <button onClick={() => openEditProduct(product)} className="text-fk-blue hover:text-fk-blue-dark p-2">
-                        <FaEdit />
-                      </button>
-                      <button onClick={() => confirmDeleteProduct(product)} className="text-red-500 hover:text-red-700 p-2">
-                        <FaTrash />
-                      </button>
+
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-gray-900 line-clamp-2">{product.title}</h3>
+                      <p className="text-sm text-gray-500 mt-1">{product.brand || 'No brand'}</p>
+                      {product.sku ? <p className="text-xs text-gray-400 mt-1">{product.sku}</p> : null}
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {product.isFeatured ? (
+                          <span className="px-2 py-1 rounded-lg bg-[#eef5ff] text-[#23528c] text-xs font-medium">
+                            Top Deals
+                          </span>
+                        ) : null}
+                        {product.showInBestSelling ? (
+                          <span className="px-2 py-1 rounded-lg bg-[#eefcf5] text-[#1a7a52] text-xs font-medium">
+                            Best Laptop
+                          </span>
+                        ) : null}
+                        {!product.isFeatured && !product.showInBestSelling ? (
+                          <span className="px-2 py-1 rounded-lg bg-gray-100 text-gray-500 text-xs font-medium">
+                            Standard Listing
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
-                  </td>
-                </tr>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-gray-400">Category</p>
+                      <p className="font-medium text-gray-800 capitalize">{product.category}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Stock</p>
+                      <p className="font-medium text-gray-800">{product.stock}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Selling Price</p>
+                      <p className="font-medium text-gray-800">
+                        Rs. {Number(product.discountPrice || product.price || 0).toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Images</p>
+                      <p className="font-medium text-gray-800">{Array.isArray(product.images) ? product.images.length : 0}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openEditProduct(product)}
+                      className="flex-1 bg-fk-blue text-white py-2.5 rounded-lg text-sm font-medium hover:bg-fk-blue-dark"
+                    >
+                      Edit Product
+                    </button>
+                    <button
+                      onClick={() => confirmDeleteProduct(product)}
+                      className="flex-1 border border-red-200 text-red-600 py-2.5 rounded-lg text-sm font-medium hover:bg-red-50"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </article>
               ))}
-            </tbody>
-          </table>
+            </div>
+
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full min-w-[880px]">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Image</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Product</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Category</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Price</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Stock</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Homepage</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProducts.map((product) => (
+                    <tr key={product.id} className="border-t hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        {(product.image || product.images?.[0]) ? (
+                          <div className="space-y-1">
+                            <img
+                              src={product.image || product.images?.[0]}
+                              alt={product.title}
+                              className="w-16 h-16 object-cover rounded-lg"
+                            />
+                            {Array.isArray(product.images) && product.images.length > 1 ? (
+                              <span className="text-xs text-gray-500">{product.images.length} images</span>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center text-xs text-gray-500">
+                            No image
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-gray-900">{product.title}</div>
+                        <div className="text-sm text-gray-500 mt-1">{product.brand || 'No brand'}</div>
+                        {product.sku ? <div className="text-xs text-gray-400 mt-1">{product.sku}</div> : null}
+                      </td>
+                      <td className="py-3 px-4 capitalize">{product.category}</td>
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-gray-900">
+                          Rs. {Number(product.discountPrice || product.price || 0).toLocaleString('en-IN')}
+                        </div>
+                        {product.discountPrice ? (
+                          <div className="text-xs text-gray-400 line-through">
+                            Rs. {Number(product.price || 0).toLocaleString('en-IN')}
+                          </div>
+                        ) : null}
+                      </td>
+                      <td className="py-3 px-4">{product.stock}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex flex-wrap gap-2">
+                          {product.isFeatured ? (
+                            <span className="px-2 py-1 rounded-lg bg-[#eef5ff] text-[#23528c] text-xs font-medium">
+                              Top Deals
+                            </span>
+                          ) : null}
+                          {product.showInBestSelling ? (
+                            <span className="px-2 py-1 rounded-lg bg-[#eefcf5] text-[#1a7a52] text-xs font-medium">
+                              Best Laptop
+                            </span>
+                          ) : null}
+                          {!product.isFeatured && !product.showInBestSelling ? (
+                            <span className="px-2 py-1 rounded-lg bg-gray-100 text-gray-500 text-xs font-medium">
+                              Standard
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-2">
+                          <button onClick={() => openEditProduct(product)} className="text-fk-blue hover:text-fk-blue-dark p-2 rounded-lg hover:bg-fk-bg">
+                            <FaEdit />
+                          </button>
+                          <button onClick={() => confirmDeleteProduct(product)} className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50">
+                            <FaTrash />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </section>
 
@@ -582,7 +710,7 @@ function AdminProducts() {
 
       {showProductModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-5 sm:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">{editingProduct ? 'Edit Product' : 'Add Product'}</h2>
               <button onClick={closeProductModal} className="text-gray-500 hover:text-gray-700">
@@ -822,17 +950,42 @@ function AdminProducts() {
                 )}
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  name="isFeatured"
-                  checked={productForm.isFeatured}
-                  onChange={handleProductInputChange}
-                />
-                Show in featured products
-              </label>
+              <div className="rounded-lg border border-gray-200 bg-[#fbfdff] p-4 space-y-3">
+                <p className="text-sm font-medium text-gray-800">Homepage placement</p>
 
-              <div className="flex gap-4">
+                <label className="flex items-start gap-3 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    name="isFeatured"
+                    checked={productForm.isFeatured}
+                    onChange={handleProductInputChange}
+                    className="mt-1"
+                  />
+                  <span>
+                    <span className="block font-medium text-gray-800">Include in Top Deals</span>
+                    <span className="text-xs text-gray-500">Shows this product in the homepage Top Deals section.</span>
+                  </span>
+                </label>
+
+                <label className={`flex items-start gap-3 text-sm text-gray-700 ${isLaptopSelection ? '' : 'opacity-60'}`}>
+                  <input
+                    type="checkbox"
+                    name="showInBestSelling"
+                    checked={Boolean(productForm.showInBestSelling)}
+                    onChange={handleProductInputChange}
+                    className="mt-1"
+                    disabled={!isLaptopSelection}
+                  />
+                  <span>
+                    <span className="block font-medium text-gray-800">Include in Best Selling Laptops</span>
+                    <span className="text-xs text-gray-500">
+                      Available only when the product category is set to laptops.
+                    </span>
+                  </span>
+                </label>
+              </div>
+
+              <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4">
                 <button type="button" onClick={closeProductModal} className="flex-1 border border-gray-300 text-gray-700 py-2 rounded hover:bg-gray-50">
                   Cancel
                 </button>

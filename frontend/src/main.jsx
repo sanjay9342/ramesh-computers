@@ -12,8 +12,8 @@ import { AppLoadProvider } from './context/AppLoadContext.jsx'
 import InitialLoadOverlay from './components/InitialLoadOverlay.jsx'
 import { STORE_INFO } from './data/storeInfo.js'
 
-import './index.css'
 import 'react-toastify/dist/ReactToastify.css'
+import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -25,14 +25,17 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <App />
             <ToastContainer
               position="top-right"
-              autoClose={3000}
+              autoClose={3200}
               hideProgressBar={false}
               newestOnTop
               closeOnClick
               pauseOnFocusLoss
-              draggable
+              draggable={false}
               pauseOnHover
               theme="light"
+              toastClassName="app-toast"
+              bodyClassName="app-toast-body"
+              progressClassName="app-toast-progress"
             />
           </AppLoadProvider>
         </BrowserRouter>
